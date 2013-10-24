@@ -14,7 +14,8 @@
 ;; cons cells. Car is the `to' node, cdr is the 
 ;; data for this edge.
 
-(struct directed-graph (data size))
+(struct directed-graph (data size)
+	#:transparent)
 
 (define data directed-graph-data)
 (define size directed-graph-size)
@@ -26,7 +27,7 @@
   (let ((graph (if (> (max from to) (size graph))
 		 (grow-graph graph (max from to))
 		 graph)))
-    (struct-copy directed-graph
+    (struct-copy directed-graph graph
 		 [data (for/list ([i (build-list (size graph) values)]
 				  [l (data graph)])
 				 (if (= i from)
@@ -41,7 +42,7 @@
 
 (define (set-node-data graph node data)
   (if (<= node (size graph))
-    (struct-copy directed-graph
+    (struct-copy directed-graph graph
 		 [data (for/list ([i (build-list (size graph) values)]
 				  [l (data graph)])
 				 (if (= i node)
@@ -63,7 +64,7 @@
 ;; to create it!
 (define (set-edge-data graph from to data)
   (if (<= (max from to) (size graph))
-    (struct-copy directed-graph
+    (struct-copy directed-graph graph
 		 [data (for/list ([i (build-list (size graph))]
 				  [n (data graph)])
 				 (if (= i from)
@@ -97,7 +98,7 @@
 (define (grow-graph graph n)
   (let ((d (- n (size graph))))
     (unless (negative? d)
-      (struct-copy directed-graph
+      (struct-copy directed-graph graph
 		   [data (append (data graph)
 				 (make-list d '(() ())))]
 		   [size n]))))
