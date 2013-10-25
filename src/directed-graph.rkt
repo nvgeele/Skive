@@ -1,6 +1,6 @@
 #!racket
 
-(provide make-directed-graph
+(provide make
 	 connected?
 	 add-edge
 	 node-data set-node-data
@@ -29,7 +29,7 @@
 
 (define data directed-graph-data)
 
-(define (make-directed-graph)
+(define (make)
   (directed-graph (hash)))
 
 (define (connected? graph from to)
