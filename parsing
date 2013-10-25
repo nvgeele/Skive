@@ -1,3 +1,0 @@
-Er is een datastructuur genaamd directed-graphs. Deze data-structuur stelt gerichte grafen voor die oneindig in grootte kunnen zijn. Elke node en edge tussen nodes kunnen data bevatten die bereikbaar is en gewijzigd kan worden door respectievelijk edge/node-data en edge/node-data!. Intern worden de grafen voorgesteld door een adjacency-list die ook de data bevat.
-
-Een Skive programma wordt, vooraleer het gecompilet wordt, geparset naar een interne graf representatie. Deze worden in een speciale struct gestoken die meerdere elementen bevat. Een daarvan is de
