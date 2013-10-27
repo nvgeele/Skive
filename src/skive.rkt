@@ -40,12 +40,7 @@
 	(operands (cdr exp)))
     (if (hash-ref natives operator #f)
       (let*-values ([(boundary inputs)
-		     (let loop ((boundary boundary) (inputs '())
-				(cur (car operands)) (rem (cdr operands)))
-		       (let-values ([(gb link) (parse boundary cur)])
-			 (if (null? rem)
-			   (values gb (reverse (cons link inputs)))
-			   (loop gb (cons link inputs) (car rem) (cdr rem)))))]
+		     (parse-operands boundary operands)]
 		    [(boundary oplabel)
 		     (add-node boundary (hash-ref natives operator))])
 	(values (car (foldl (lambda (input boundary)
@@ -58,3 +53,17 @@
 		oplabel))
       (error "Only native functions supported!"))))
 
+;; Accepts a graph-boundary and a list of operands.
+;; Returns boundary with nodes/edges of operands added
+;; and a list of the operands' node labels.
+(define (parse-operands boundary operands)
+  (if (null? operands)
+    (values boundary '())
+    (let loop ((boundary boundary)
+	       (inputs '())
+	       (cur (car operands))
+	       (rem (cdr operands)))
+      (let-values ([(gb link) (parse boundary cur)])
+	(if (null? rem)
+	  (values gb (reverse (cons link inputs)))
+	  (loop gb (cons link inputs) (car rem) (cdr rem)))))))
