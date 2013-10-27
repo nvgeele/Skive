@@ -12,9 +12,9 @@
 ;; environments etc are implemented(?)
 
 (define (compile code)
-  (let-values ([(gb link)
+  (let-values ([(gb result-node)
 		(parse (make-graph-boundary "main") code)]); '(0 1))])
-    (display link)(newline)
+    (display result-node)(newline)
     (display gb)))
 
 (define (parse boundary exp); linkage)
