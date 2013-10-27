@@ -44,8 +44,8 @@
     (cond ((or (null? (hash-ref nodes in-id null))
 	      (null? (hash-ref nodes out-id null)))
 	   (error "One or more of the node id's are invalid!"))
-	  ((and (port-free? gb in-id in-port)
-		(port-free? gb out-id out-port))
+	  ((not (and (port-free? gb in-id in-port)
+		     (port-free? gb out-id out-port)))
 	   (error "One of the ports is already connected!"))
 	  (else
 	    (struct-copy graph-boundary gb
