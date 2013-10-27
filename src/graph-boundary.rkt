@@ -1,35 +1,37 @@
 #!racket
 
-(require ;(prefix-in dg- "directed-graph.rkt")
-	 "edge.rkt"
-	 "node.rkt"
-	 "compound-node.rkt")
+(require "edge.rkt"
+	 "node.rkt")
+
+(provide make-graph-boundary
+	 add-node add-edge
+	 graph-boundary?)
 
 (struct graph-boundary (;type
-			name ;graph
-			label-counter [global #f]
-			nodes edges)
+			name
+			label-counter
+			nodes edges
+			global)
 	#:transparent)
 
-;(define type graph-boundary-type)
 (define name graph-boundary-name)
-;(define graph graph-boundary-graph)
 (define label-counter graph-boundary-label-counter)
 (define nodes graph-boundary-nodes)
 (define edges graph-boundary-edges)
 
-(define (make type name [global #f])
-  (graph-boundary type name (dg-new) 1 global (hash) '()))
+(define (make-graph-boundary ;type
+			     name [global #f])
+  (graph-boundary ;type
+		  name 1 (hash) '() global))
 
 (define (add-node gb node)
-  (if (or (node? node)
-	  (compound-node? node))
+  (values
     (struct-copy graph-boundary gb
 		 [label-counter (+ 1 (label-counter gb))]
 		 [nodes (hash-set (nodes gb)
 				  (label-counter gb)
 				  node)])
-    (error "Argument is not a valid node!")))
+    (label-counter gb)))
 
 (define (port-free? gb node port)
   (not (ormap (lambda (edge) (and (= node (edge-in-node edge))
