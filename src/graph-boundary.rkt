@@ -5,7 +5,9 @@
 
 (provide make-graph-boundary
 	 add-node add-edge
-	 graph-boundary?)
+	 graph-boundary?
+	 for-each-node
+	 for-each-edge)
 
 (struct graph-boundary (;type
 			name
@@ -52,3 +54,14 @@
 			 [edges (cons (make-edge in-id in-port
 						 out-id out-port)
 				      edges)])))))
+;; proc: label node -> any
+(define (for-each-node gb proc)
+  (for ([(label node) (nodes gb)])
+    (proc label node)))
+
+;; proc: edge -> any
+(define (for-each-edge gb node proc)
+  (for ([edge (filter (lambda (edge)
+			(= node (edge-in-node edge)))
+		   (edges gb))])
+    (proc edge)))
