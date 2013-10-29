@@ -1,21 +1,67 @@
 #!racket
 
 (require "node.rkt"
+	 "edge.rkt"
 	 "compound-node.rkt"
 	 "graph-boundary.rkt"
 	 "natives.rkt")
 
 (provide compile)
 
+(define compiler-path "/usr/local/bin/sisalc")
+
+(define types
+  "T 1 1 0 %na=Boolean\nT 2 1 1 %na=Character\nT 3 1 2 %na=Double\nT 4 1 3 %na=Integer\nT 5 1 4 %na=Null\nT 6 1 5 %na=Real\nT 7 1 6 %na=WildBasic\nT 8 10\nT 9 8 4 0\nT 10 3 0 9\n")
+
+;; HAAACKS
+(define stamps
+  "C$ D Nodes are DFOrdered\n")
+
 ;; Currently parses all into one boundary
 ;; => needs to be program when typing and
 ;; environments etc are implemented(?)
 
 (define (compile code)
-  (let-values ([(gb result-node)
-		(parse (make-graph-boundary "main") code)]); '(0 1))])
+  (let*-values ([(gb result-node)
+		 (parse (make-graph-boundary "main") code)]
+		[(transformed)
+		 (transform-boundary gb result-node)]
+		[(path)
+		 (compile-to-native
+		   (string-append types stamps transformed))])
     (display result-node)(newline)
-    (display gb)))
+    (display gb)(newline)
+    (display transformed)(newline)
+    (display path)(newline)
+    (create-wrapper path)))
+
+(define (create-wrapper path)
+  (lambda ()
+    (let-values ([(sp out in err)
+		  (subprocess #f #f #f
+			      path)])
+      (subprocess-wait sp)
+      (let ((output (read out)))
+	(close-output-port in)
+	(close-input-port out)
+	(close-input-port err)
+	output))))
+
+(define (compile-to-native code)
+  (let* ((code-file (make-temporary-file "skiveif1~a.if1" #f "/tmp/skive"))
+	 (exec-file (make-temporary-file "skiveexe~a" #f "/tmp/skive"))
+	 (out (open-output-file code-file #:exists 'truncate)))
+    (display code out)
+    (close-output-port out)
+    (let-values ([(sp out in err) (subprocess #f #f #f
+					      compiler-path 
+				 	      "-o" exec-file
+					      code-file)])
+      (subprocess-wait sp)
+      (close-output-port in)
+      (close-input-port out)
+      (close-input-port err))
+    exec-file))
 
 (define (parse boundary exp); linkage)
   (cond ((self-evaluating? exp)
@@ -67,3 +113,41 @@
 	(if (null? rem)
 	  (values gb (reverse (cons link inputs)))
 	  (loop gb (cons link inputs) (car rem) (cdr rem)))))))
+
+;; Transforms abstract graph-boundary to IF1 code.
+(define (transform-boundary boundary result-node)
+  (~a
+    (foldl-nodes boundary "X 10 \"main\"\n"
+		 (lambda (label node res)
+		   (string-append
+		     res
+		     (cond
+		       ((literal-node? node) (transform-literal-node boundary node label))
+		       ((node? node) (transform-node boundary node label))
+		       (else (transform-compound-node boundary node label))))))
+    "E " result-node " 1 0 1 4\n"))
+
+(define (transform-node boundary node label)
+  (let ((opcode (opcode node)))
+    (foldl-edges boundary label
+		 (~a "N " label " " opcode "\n")
+		 (lambda (edge res)
+		   (string-append
+		     res
+		     (~a "E " label
+			 " " (edge-in-port edge)
+			 " " (edge-out-node edge)
+			 " " (edge-out-port edge)
+			 " 4\n"))))))
+
+
+(define (transform-literal-node boundary node label)
+  (let ((value (value node)))
+    (foldl-edges boundary label
+		 "" (lambda (edge res)
+		      (~a "L " (edge-out-node edge)
+			  " "  (edge-out-port edge)
+			  " 4 \"" value "\"\n")))))
+
+(define (transform-compound-node boundary label)
+  "")
