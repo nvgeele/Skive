@@ -6,4 +6,4 @@
 (provide natives)
 
 (define natives
-  (hash `+ (make-node 141)))
+  (hash '+ (make-node 141)))
