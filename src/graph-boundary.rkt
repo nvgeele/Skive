@@ -7,7 +7,9 @@
 	 add-node add-edge
 	 graph-boundary?
 	 for-each-node
-	 for-each-edge)
+	 for-each-edge
+	 foldl-nodes
+	 foldl-edges)
 
 (struct graph-boundary (;type
 			name
@@ -70,7 +72,7 @@
 (define (foldl-nodes gb init proc)
   (foldl (lambda (p res) (proc (car p) (cdr p) res))
 	 init
-	 (hash->list (nodes gb)))
+	 (hash->list (nodes gb))))
 
 ;; proc: edge any -> any
 (define (foldl-edges gb node init proc)
