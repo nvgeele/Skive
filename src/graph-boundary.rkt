@@ -65,3 +65,16 @@
 			(= node (edge-in-node edge)))
 		   (edges gb))])
     (proc edge)))
+
+;; proc: label node any -> any
+(define (foldl-nodes gb init proc)
+  (foldl (lambda (p res) (proc (car p) (cdr p) res))
+	 init
+	 (hash->list (nodes gb)))
+
+;; proc: edge any -> any
+(define (foldl-edges gb node init proc)
+  (foldl proc init
+	 (filter (lambda (edge)
+		   (= node (edge-in-node edge)))
+		 (edges gb))))
