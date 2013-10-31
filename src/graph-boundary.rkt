@@ -38,8 +38,8 @@
     (label-counter gb)))
 
 (define (port-free? gb node port)
-  (not (ormap (lambda (edge) (and (= node (edge-in-node edge))
-				  (= port (edge-in-port edge))))
+  (not (ormap (lambda (edge) (and (= node (edge-out-node edge))
+				  (= port (edge-out-port edge))))
 	      (edges gb))))
 
 (define (add-edge gb in-id in-port out-id out-port)
@@ -48,8 +48,7 @@
     (cond ((or (null? (hash-ref nodes in-id null))
 	      (null? (hash-ref nodes out-id null)))
 	   (error "One or more of the node id's are invalid!"))
-	  ((not (and (port-free? gb in-id in-port)
-		     (port-free? gb out-id out-port)))
+	  ((not (port-free? gb out-id out-port))
 	   (error "One of the ports is already connected!"))
 	  (else
 	    (struct-copy graph-boundary gb
