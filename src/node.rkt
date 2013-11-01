@@ -1,22 +1,22 @@
 #!racket
 
-(provide make-node node?
-	 opcode
-	 make-literal-node literal-node?
-	 value)
+(provide make-simple-node simple-node? opcode
+	 make-literal-node literal-node? value)
 
-(struct node (opcode)
+(struct node (type value)
 	#:transparent)
 
-(define make-node node)
-(define opcode node-opcode)
+(define (make-simple-node opcode)
+  (node 'simple opcode))
 
 (define (make-literal-node value)
-  (node `(literal ,value)))
+  (node 'literal value))
 
 (define (literal-node? node)
-  (and (list? (opcode node))
-       (eq? 'literal (car (opcode node)))))
+  (eq? (node-type node) 'literal))
 
-(define (value node)
-  (cadr (opcode node)))
+(define (simple-node? node)
+  (eq? (node-type node) 'simple))
+
+(define opcode node-value)
+(define value node-value)

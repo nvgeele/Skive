@@ -74,7 +74,7 @@
   (or (integer? exp)))
 
 (define (parse-self-evaluating boundary exp)
-  (let ((node (make-node `(literal ,exp))))
+  (let ((node (make-literal-node exp)))
     (let-values ([(boundary label) (add-node boundary node)])
       (values boundary label))))
 
@@ -123,11 +123,11 @@
 		     res
 		     (cond
 		       ((literal-node? node) (transform-literal-node boundary node label))
-		       ((node? node) (transform-node boundary node label))
+		       ((simple-node? node) (transform-simple-node boundary node label))
 		       (else (transform-compound-node boundary node label))))))
     "E " result-node " 1 0 1 4\n"))
 
-(define (transform-node boundary node label)
+(define (transform-simple-node boundary node label)
   (let ((opcode (opcode node)))
     (foldl-edges boundary label
 		 (~a "N " label " " opcode "\n")

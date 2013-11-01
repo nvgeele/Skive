@@ -1,7 +1,6 @@
 #!racket
 
-(require "edge.rkt"
-	 "node.rkt")
+(require "edge.rkt")
 
 (provide make-graph-boundary
 	 add-node add-edge
