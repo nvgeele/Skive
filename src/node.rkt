@@ -24,7 +24,9 @@
 ;; Is it chainable?
 ;; e.g.: native + is chainable
 ;; ->  (+ 5 5 5) := (+ 5 (+ 5 5))
-(define chainable? node-chainable?)
+(define (chainable? node)
+  (and (node-chainable? node)
+       (= 2 (node-inputs node))))
 
 ;; Amount of input-ports available
 (define inputs node-inputs)
