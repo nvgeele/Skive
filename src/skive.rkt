@@ -6,14 +6,14 @@
 	 "graph-boundary.rkt"
 	 "natives.rkt")
 
-(provide compile)
+(provide compile
+	 parse-and-graphviz)
 
 (define compiler-path "/usr/local/bin/sisalc")
 
 (define types
   "T 1 1 0 %na=Boolean\nT 2 1 1 %na=Character\nT 3 1 2 %na=Double\nT 4 1 3 %na=Integer\nT 5 1 4 %na=Null\nT 6 1 5 %na=Real\nT 7 1 6 %na=WildBasic\nT 8 10\nT 9 8 4 0\nT 10 3 0 9\n")
 
-;; HAAACKS
 (define stamps
   "C$ D Nodes are DFOrdered\n")
 
@@ -29,11 +29,40 @@
 		[(path)
 		 (compile-to-native
 		   (string-append types stamps transformed))])
-    (display result-node)(newline)
-    (display gb)(newline)
-    (display transformed)(newline)
-    (display path)(newline)
     (create-wrapper path)))
+
+(define (parse-and-graphviz code)
+  (let*-values ([(dotfile)
+		 (make-temporary-file "skivedot~a.dot" #f "/tmp")]
+		[(output)
+		 (open-output-file dotfile #:exists 'truncate)]
+		[(gb result-node)
+		 (parse (make-graph-boundary "main") code)])
+    (display (~a (foldl-nodes gb "digraph G { "
+			      (lambda (label node res)
+				(let ((node-label (~a "node" label))
+				      (node-text
+					(~a "node " label "\\n"
+					    (cond ((literal-node? node)
+						   (~a "literal: "
+						       (value node)))
+						  ((simple-node? node)
+						   (~a "simple: "
+						       (opcode node)))
+						  (else "compound node")))))
+				  (~a res
+				      (foldl-edges gb label
+						   (~a node-label " [label=\""
+						       node-text "\"];")
+						   (lambda (edge res)
+						     (~a res
+							 node-label
+							 " -> node" (edge-out-node edge)
+							 " [label=\"" (edge-out-port edge) "\"];")))))))
+		 "}") output)
+    (close-output-port output)
+    (display "Generated dot-file: ")(display dotfile)))
+
 
 (define (create-wrapper path)
   (lambda ()
