@@ -48,8 +48,8 @@
 	output))))
 
 (define (compile-to-native code)
-  (let* ((code-file (make-temporary-file "skiveif1~a.if1" #f "/tmp/skive"))
-	 (exec-file (make-temporary-file "skiveexe~a" #f "/tmp/skive"))
+  (let* ((code-file (make-temporary-file "skiveif1~a.if1" #f "/tmp"))
+	 (exec-file (make-temporary-file "skiveexe~a" #f "/tmp"))
 	 (out (open-output-file code-file #:exists 'truncate)))
     (display code out)
     (close-output-port out)
