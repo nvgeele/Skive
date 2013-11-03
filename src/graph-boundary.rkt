@@ -1,6 +1,7 @@
 #!racket
 
-(require "edge.rkt")
+(require "edge.rkt"
+	 "node.rkt")
 
 (provide make-graph-boundary
 	 add-node add-edge
@@ -8,7 +9,8 @@
 	 for-each-node
 	 for-each-edge
 	 foldl-nodes
-	 foldl-edges)
+	 foldl-edges
+	 graph-boundary->dot-file)
 
 (struct graph-boundary (;type
 			name
@@ -23,9 +25,9 @@
 (define edges graph-boundary-edges)
 
 (define (make-graph-boundary ;type
-			     name [global #f])
+	  name [global #f])
   (graph-boundary ;type
-		  name 1 (hash) '() global))
+    name 1 (hash) '() global))
 
 (define (add-node gb node)
   (values
@@ -45,7 +47,7 @@
   (let ((nodes (nodes gb))
 	(edges (edges gb)))
     (cond ((or (null? (hash-ref nodes in-id null))
-	      (null? (hash-ref nodes out-id null)))
+	       (null? (hash-ref nodes out-id null)))
 	   (error "One or more of the node id's are invalid!"))
 	  ((not (port-free? gb out-id out-port))
 	   (error "One of the ports is already connected!"))
@@ -57,14 +59,14 @@
 ;; proc: label node -> any
 (define (for-each-node gb proc)
   (for ([(label node) (nodes gb)])
-    (proc label node)))
+       (proc label node)))
 
 ;; proc: edge -> any
 (define (for-each-edge gb node proc)
   (for ([edge (filter (lambda (edge)
 			(= node (edge-in-node edge)))
-		   (edges gb))])
-    (proc edge)))
+		      (edges gb))])
+       (proc edge)))
 
 ;; proc: label node any -> any
 (define (foldl-nodes gb init proc)
@@ -78,3 +80,27 @@
 	 (filter (lambda (edge)
 		   (= node (edge-in-node edge)))
 		 (edges gb))))
+
+(define (graph-boundary->dot-file gb)
+  (~a (foldl-nodes gb "digraph G { "
+		   (lambda (label node res)
+		     (let ((node-label (~a "node" label))
+			   (node-text
+			     (~a "node " label "\\n"
+				 (cond ((literal-node? node)
+					(~a "literal: "
+					    (value node)))
+				       ((simple-node? node)
+					(~a "simple: "
+					    (opcode node)))
+				       (else "compound node")))))
+		       (~a res
+			   (foldl-edges gb label
+					(~a node-label " [label=\""
+					    node-text "\"];")
+					(lambda (edge res)
+					  (~a res
+					      node-label
+					      " -> node" (edge-out-node edge)
+					      " [label=\"" (edge-out-port edge) "\"];")))))))
+      "}"))
