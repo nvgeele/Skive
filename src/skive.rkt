@@ -8,13 +8,15 @@
 	 "ffi.rkt")
 
 (provide compile
-	 parse-and-graphviz)
+	 parse-and-graphviz
+	 define-skive)
 
 (define sisal-compiler-path "/usr/local/bin/sisalc")
 (define gcc-path "/usr/bin/gcc")
 (define runtime-object-path "/usr/local/lib/sisal/srt0.o")
 (define sisal-lib-path "/usr/local/lib/sisal")
 (define sisal-include-path "/usr/local/include/sisal")
+(define graphviz-dot-path "/usr/local/bin/dot")
 
 (define types
   "T 1 1 0 %na=Boolean\nT 2 1 1 %na=Character\nT 3 1 2 %na=Double\nT 4 1 3 %na=Integer\nT 5 1 4 %na=Null\nT 6 1 5 %na=Real\nT 7 1 6 %na=WildBasic\nT 8 10\nT 9 8 4 0\nT 10 3 0 9\n")
@@ -22,10 +24,24 @@
 (define stamps
   "C$ D Nodes are DFOrdered\n")
 
+(define-syntax define-skive
+  (syntax-rules ()
+    [(define-skive (name) . body)
+     (define name
+       (let loop ((gb (make-graph-boundary "main"))
+		(cur (car (quote body)))
+		(rem (cdr (quote body))))
+       (let-values ([(new-gb result-node) (parse gb cur)])
+	 (if (null? rem)
+	   (let* ((transformed (transform-boundary new-gb result-node))
+		  (path (compile-to-dylib
+			  (string-append types stamps transformed))))
+	     (make-thunk path))
+	   (loop new-gb (car rem) (cdr rem))))))]))
+
 ;; Currently parses all into one boundary
 ;; => needs to be program when typing and
 ;; environments etc are implemented(?)
-
 (define (compile code)
   (let*-values ([(gb result-node)
 		 (parse (make-graph-boundary "main") code)]
@@ -38,35 +54,23 @@
 
 (define (parse-and-graphviz code)
   (let*-values ([(dotfile)
-		 (make-temporary-file "skivedot~a.dot" #f "/tmp")]
+		 (path->string (make-temporary-file "skivedot~a" #f "/tmp"))]
 		[(output)
 		 (open-output-file dotfile #:exists 'truncate)]
+		[(pngfile)
+		 (string-append dotfile ".png")]
 		[(gb result-node)
 		 (parse (make-graph-boundary "main") code)])
-    (display (~a (foldl-nodes gb "digraph G { "
-			      (lambda (label node res)
-				(let ((node-label (~a "node" label))
-				      (node-text
-					(~a "node " label "\\n"
-					    (cond ((literal-node? node)
-						   (~a "literal: "
-						       (value node)))
-						  ((simple-node? node)
-						   (~a "simple: "
-						       (opcode node)))
-						  (else "compound node")))))
-				  (~a res
-				      (foldl-edges gb label
-						   (~a node-label " [label=\""
-						       node-text "\"];")
-						   (lambda (edge res)
-						     (~a res
-							 node-label
-							 " -> node" (edge-out-node edge)
-							 " [label=\"" (edge-out-port edge) "\"];")))))))
-		 "}") output)
+    (display (graph-boundary->dot-file gb) output)
     (close-output-port output)
-    (display "Generated dot-file: ")(display dotfile)))
+    (let-values ([(sp out in err) (subprocess #f #f #f
+					      graphviz-dot-path
+					      "-Tpng" "-O" dotfile)])
+      (subprocess-wait sp)(delete-file dotfile)
+      (close-output-port in)(close-input-port out)(close-input-port err)
+      (if (file-exists? pngfile)
+	(display pngfile)
+	(display "Could not create png file")))))
 
 (define (compile-to-dylib code)
   (let* ((code-prefix (path->string (make-temporary-file "skiveif1~a" #f "/tmp")))
