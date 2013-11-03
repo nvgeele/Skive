@@ -4,12 +4,17 @@
 	 "edge.rkt"
 	 "compound-node.rkt"
 	 "graph-boundary.rkt"
-	 "natives.rkt")
+	 "natives.rkt"
+	 "ffi.rkt")
 
 (provide compile
 	 parse-and-graphviz)
 
-(define compiler-path "/usr/local/bin/sisalc")
+(define sisal-compiler-path "/usr/local/bin/sisalc")
+(define gcc-path "/usr/bin/gcc")
+(define runtime-object-path "/usr/local/lib/sisal/srt0.o")
+(define sisal-lib-path "/usr/local/lib/sisal")
+(define sisal-include-path "/usr/local/include/sisal")
 
 (define types
   "T 1 1 0 %na=Boolean\nT 2 1 1 %na=Character\nT 3 1 2 %na=Double\nT 4 1 3 %na=Integer\nT 5 1 4 %na=Null\nT 6 1 5 %na=Real\nT 7 1 6 %na=WildBasic\nT 8 10\nT 9 8 4 0\nT 10 3 0 9\n")
@@ -27,9 +32,9 @@
 		[(transformed)
 		 (transform-boundary gb result-node)]
 		[(path)
-		 (compile-to-native
+		 (compile-to-dylib
 		   (string-append types stamps transformed))])
-    (create-wrapper path)))
+    (make-thunk path)))
 
 (define (parse-and-graphviz code)
   (let*-values ([(dotfile)
@@ -63,34 +68,45 @@
     (close-output-port output)
     (display "Generated dot-file: ")(display dotfile)))
 
-
-(define (create-wrapper path)
-  (lambda ()
-    (let-values ([(sp out in err)
-		  (subprocess #f #f #f
-			      path)])
-      (subprocess-wait sp)
-      (let ((output (read out)))
-	(close-output-port in)
-	(close-input-port out)
-	(close-input-port err)
-	output))))
-
-(define (compile-to-native code)
-  (let* ((code-file (make-temporary-file "skiveif1~a.if1" #f "/tmp"))
-	 (exec-file (make-temporary-file "skiveexe~a" #f "/tmp"))
+(define (compile-to-dylib code)
+  (let* ((code-prefix (path->string (make-temporary-file "skiveif1~a" #f "/tmp")))
+	 (code-file (string-append code-prefix ".if1"))
+	 (csrc-file (string-append code-prefix ".c"))
+	 (cobj-file (string-append code-prefix ".o"))
+	 (clib-file (string-append code-prefix ".dylib"))
 	 (out (open-output-file code-file #:exists 'truncate)))
     (display code out)
     (close-output-port out)
     (let-values ([(sp out in err) (subprocess #f #f #f
-					      compiler-path 
-				 	      "-o" exec-file
-					      code-file)])
+					      sisal-compiler-path 
+					      "-C" code-file)])
       (subprocess-wait sp)
-      (close-output-port in)
-      (close-input-port out)
-      (close-input-port err))
-    exec-file))
+      (close-output-port in)(close-input-port out)(close-input-port err)
+      (if (file-exists? csrc-file)
+	(let-values ([(sp out in err) (subprocess #f #f #f
+						  gcc-path csrc-file
+						  "-c" "-o" cobj-file
+						  (~a "-I" sisal-include-path)
+						  "-g" "-O2")])
+	  (subprocess-wait sp)
+	  (close-output-port in)(close-input-port out)(close-input-port err)
+	  (if (file-exists? cobj-file)
+	    (let-values ([(sp out in err) (subprocess #f #f #f
+						      gcc-path
+						      "-o" clib-file
+						      runtime-object-path
+						      cobj-file
+						      (~a "-L" sisal-lib-path)
+						      "-lsisal" "-lm")])
+	      (subprocess-wait sp)
+	      (close-output-port in)(close-input-port out)(close-input-port err)
+	      (delete-file code-file)(delete-file csrc-file)
+	      (delete-file cobj-file)(delete-file code-prefix)
+	      (if (file-exists? clib-file)
+		clib-file
+		(error "Could not compile dylib")))
+	    (error "Could not compile C source to object file")))
+	(error "Could not create C source file.")))))
 
 (define (parse boundary exp); linkage)
   (cond ((self-evaluating? exp)
