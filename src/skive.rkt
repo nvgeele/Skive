@@ -5,7 +5,8 @@
 	 "compound-node.rkt"
 	 "graph-boundary.rkt"
 	 "natives.rkt"
-	 "ffi.rkt")
+	 "ffi.rkt"
+	 "program.rkt")
 
 (provide compile
 	 parse-and-graphviz
