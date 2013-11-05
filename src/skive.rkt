@@ -32,13 +32,13 @@
        (let loop ((gb (make-graph-boundary "main"))
 		(cur (car (quote body)))
 		(rem (cdr (quote body))))
-       (let-values ([(new-gb result-node) (parse gb cur)])
-	 (if (null? rem)
-	   (let* ((transformed (transform-boundary new-gb result-node))
-		  (path (compile-to-dylib
-			  (string-append types stamps transformed))))
-	     (make-thunk path))
-	   (loop new-gb (car rem) (cdr rem))))))]))
+	 (let-values ([(new-gb result-node) (parse gb cur)])
+	   (if (null? rem)
+	     (let* ((transformed (transform-boundary new-gb result-node))
+		    (path (compile-to-dylib
+			    (string-append types stamps transformed))))
+	       (make-thunk path))
+	     (loop new-gb (car rem) (cdr rem))))))]))
 
 ;; Currently parses all into one boundary
 ;; => needs to be program when typing and
