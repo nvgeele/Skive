@@ -16,5 +16,5 @@
   (if (graph-boundary? gb)
     (struct-copy program p
 		 [boundaries (cons gb
-				   (boundaries p))])
+				   (program-boundaries p))])
     (error "Not a graph-boundary!")))
