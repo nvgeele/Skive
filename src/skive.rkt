@@ -28,16 +28,12 @@
   (syntax-rules ()
     [(define-skive (name) . body)
      (define name
-       (let loop ((gb (make-graph-boundary "main"))
-		(cur (car (quote body)))
-		(rem (cdr (quote body))))
-       (let-values ([(new-gb result-node) (parse gb cur)])
-	 (if (null? rem)
-	   (let* ((transformed (transform-boundary new-gb result-node))
-		  (path (compile-to-dylib
-			  (string-append types stamps transformed))))
-	     (make-thunk path))
-	   (loop new-gb (car rem) (cdr rem))))))]))
+       (let-values ([(gb result-node) (parse-sequence (make-graph-boundary "main" #t)
+						      (quote body) (hash))])
+	 (let* ((transformed (transform-boundary gb result-node))
+		(path (compile-to-dylib
+			(string-append types stamps transformed))))
+	   (make-thunk path))))]))
 
 ;; Currently parses all into one boundary
 ;; => needs to be program when typing and
@@ -60,7 +56,7 @@
 		[(pngfile)
 		 (string-append dotfile ".png")]
 		[(gb result-node)
-		 (parse (make-graph-boundary "main") code)])
+		 (parse-boundary (make-graph-boundary "main") code (hash))])
     (display (graph-boundary->dot-file gb) output)
     (close-output-port output)
     (let-values ([(sp out in err) (subprocess #f #f #f
@@ -112,25 +108,70 @@
 	    (error "Could not compile C source to object file")))
 	(error "Could not create C source file.")))))
 
-(define (parse boundary exp); linkage)
+(define (parse exp)
+  (parse-boundary (make-graph-boundary "main")
+		  exp (hash)))
+
+(define (parse-boundary gb exp env)
   (cond ((self-evaluating? exp)
-	 (parse-self-evaluating boundary exp))
+	 (parse-self-evaluating gb exp env))
+	((let? exp)
+	 (parse-let gb exp env))
 	((application? exp)
-	 (parse-application boundary exp)); linkage))
+	 (parse-application gb exp env))
 	(else (error "Incorrect expression"))))
 
-(define (self-evaluating? exp)
-  (or (integer? exp)))
+(define (parse-sequence gb exps env)
+  (let loop ((gb gb)
+	     (cur (car exps))
+	     (rem (cdr exps)))
+    (let-values ([(gb result-node) (parse-boundary gb cur env)])
+      (if (null? rem)
+	(values gb result-node)
+	(loop gb (car rem) (cdr rem))))))
 
-(define (parse-self-evaluating boundary exp)
-  (let ((node (make-literal-node exp)))
-    (let-values ([(boundary label) (add-node boundary node)])
-      (values boundary label))))
+(define (let? exp)
+  (and (list? exp)
+       (eq? (car exp) 'let)))
+
+(define (let-definitions exp)
+  (cadr exp))
+
+(define (let-body exp)
+  (cddr exp))
+
+(define (parse-let gb exp env)
+  (let ((let-defs (let-definitions exp))
+	(let-body (let-body exp)))
+    (let* ((s (foldl (lambda (def p)
+		       (let ((gb (car p))(env (cdr p))
+			     (sym (car def))(exp (cadr def)))
+			 (let-values ([(gb result-node) (parse-boundary gb exp env)])
+			   (cons gb (hash-set env sym result-node)))))
+		     (cons gb env)
+		     let-defs))
+	   (gb (car s))
+	   (env (cdr s)))
+      (parse-sequence gb let-body env))))
+
+(define (self-evaluating? exp)
+  (or (integer? exp)
+      (symbol? exp)))
+
+(define (parse-self-evaluating boundary exp env)
+  (if (symbol? exp)
+    (let ((val-node (hash-ref env exp #f)))
+      (if val-node
+	(values boundary val-node)
+	(error (~a exp " is undefined!"))))
+    (let ((node (make-literal-node exp)))
+      (let-values ([(boundary label) (add-node boundary node)])
+	(values boundary label)))))
 
 (define (application? exp)
   (list? exp))
 
-(define (parse-application boundary exp); linkage)
+(define (parse-application boundary exp env)
   (let* ((operator (car exp))
 	 (operands (cdr exp))
 	 (native (hash-ref natives operator #f)))
@@ -140,9 +181,9 @@
 	   (error "Incorrect amount of arguments for function!"))
 	  ((and (> (length operands) (inputs native))
 		(reducible? native))
-	   (parse-application boundary (reduce exp)))
+	   (parse-application boundary (reduce exp) env))
 	  (else (let*-values ([(boundary inputs)
-			       (parse-operands boundary operands)]
+			       (parse-operands boundary operands env)]
 			      [(boundary oplabel)
 			       (add-node boundary native)])
 		  (values (car (foldl (lambda (input boundary)
@@ -167,14 +208,14 @@
 ;; Accepts a graph-boundary and a list of operands.
 ;; Returns boundary with nodes/edges of operands added
 ;; and a list of the operands' node labels.
-(define (parse-operands boundary operands)
+(define (parse-operands boundary operands env)
   (if (null? operands)
     (values boundary '())
     (let loop ((boundary boundary)
 	       (inputs '())
 	       (cur (car operands))
 	       (rem (cdr operands)))
-      (let-values ([(gb link) (parse boundary cur)])
+      (let-values ([(gb link) (parse-boundary boundary cur env)])
 	(if (null? rem)
 	  (values gb (reverse (cons link inputs)))
 	  (loop gb (cons link inputs) (car rem) (cdr rem)))))))
