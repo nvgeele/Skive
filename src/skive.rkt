@@ -136,11 +136,11 @@
 	 (native (hash-ref natives operator #f)))
     (cond ((not native) (error "Only native functions supported!"))
 	  ((not (or (= (length operands) (inputs native))
-		    (chainable? native)))
+		    (reducible? native)))
 	   (error "Incorrect amount of arguments for function!"))
 	  ((and (> (length operands) (inputs native))
-		(chainable? native))
-	   (parse-application boundary (chain exp)))
+		(reducible? native))
+	   (parse-application boundary (reduce exp)))
 	  (else (let*-values ([(boundary inputs)
 			       (parse-operands boundary operands)]
 			      [(boundary oplabel)
@@ -154,7 +154,7 @@
 				      inputs))
 			  oplabel))))))
 
-(define (chain exp)
+(define (reduce exp)
   (let ((op (car exp)))
     (let loop ((args (cdr exp))
 	       (np2 (cdddr exp)))
