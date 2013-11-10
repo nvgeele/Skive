@@ -9,6 +9,8 @@
 	 conscell-car-idx conscell-cdr-idx
 	 type-check-fun-lbl
 	 binary-typedval-fun-lbl
+	 unary-typedval-fun-lbl
+	 main-fun-lbl
 	 generate-type-definitions-code)
 
 (struct type-table (table)
@@ -44,6 +46,9 @@
 
 (define type-check-fun-lbl (+ double-typedval-tuple-lbl 1))
 (define binary-typedval-fun-lbl (+ type-check-fun-lbl 1))
+(define unary-typedval-fun-lbl (+ binary-typedval-fun-lbl 1))
+
+(define main-fun-lbl (+ unary-typedval-fun-lbl 1))
 
 (define (make-basic-type-definition label basic-type)
   (format "T ~s 1 ~s\n" label basic-type))
@@ -114,4 +119,10 @@
 			      single-bool-tuple-lbl)
     (make-function-definition binary-typedval-fun-lbl
 			      double-typedval-tuple-lbl
+			      single-typedval-tuple-lbl)
+    (make-function-definition unary-typedval-fun-lbl
+			      single-typedval-tuple-lbl
+			      single-typedval-tuple-lbl)
+    (make-function-definition main-fun-lbl
+			      0
 			      single-typedval-tuple-lbl)))

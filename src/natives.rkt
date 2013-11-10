@@ -1,12 +1,20 @@
 #!racket
 
-(require "node.rkt")
+(require "node.rkt"
+	 "typing.rkt")
+
 (require (prefix-in cn- "compound-node.rkt"))
 
-(provide natives)
+(provide natives
+	 native-name
+	 native-inputs
+	 native-reducible?
+	 native-type-lbl)
+
+(struct native (name inputs reducible? type-lbl))
 
 (define natives
-  (hash '+ (make-simple-node 141 2 #t)
-	'- (make-simple-node 135 2 #t)
-	'* (make-simple-node 152 2 #t)
-	'/ (make-simple-node 122 2 #t)))
+  (hash '+ (native "plus" 2 #t binary-typedval-fun-lbl)
+	'cons (native "cons" 2 #f binary-typedval-fun-lbl)
+	'car (native "get_car" 1 #f unary-typedval-fun-lbl)
+	'cdr (native "get_cdr" 1 #f unary-typedval-fun-lbl)))

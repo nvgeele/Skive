@@ -5,7 +5,9 @@
 	 "compound-node.rkt"
 	 "graph-boundary.rkt"
 	 "natives.rkt"
-	 "ffi.rkt")
+	 "ffi.rkt"
+	 "typing.rkt"
+	 "runtime.rkt")
 
 (provide compile
 	 parse-and-graphviz
@@ -18,9 +20,6 @@
 (define sisal-include-path "/usr/local/include/sisal")
 (define graphviz-dot-path "/usr/local/bin/dot")
 
-(define types
-  "T 1 1 0 %na=Boolean\nT 2 1 1 %na=Character\nT 3 1 2 %na=Double\nT 4 1 3 %na=Integer\nT 5 1 4 %na=Null\nT 6 1 5 %na=Real\nT 7 1 6 %na=WildBasic\nT 8 10\nT 9 8 4 0\nT 10 3 0 9\n")
-
 (define stamps
   "C$ D Nodes are DFOrdered\n")
 
@@ -32,7 +31,9 @@
 						      (quote body) (hash))])
 	 (let* ((transformed (transform-boundary gb result-node))
 		(path (compile-to-dylib
-			(string-append types stamps transformed))))
+			(string-append (generate-type-definitions-code)
+				       stamps (generate-runtime-code)
+				       transformed))))
 	   (make-thunk path))))]))
 
 ;; Currently parses all into one boundary
@@ -40,12 +41,13 @@
 ;; environments etc are implemented(?)
 (define (compile code)
   (let*-values ([(gb result-node)
-		 (parse (make-graph-boundary "main") code)]
+		 (parse (make-graph-boundary "main" #t) code)]
 		[(transformed)
 		 (transform-boundary gb result-node)]
 		[(path)
 		 (compile-to-dylib
-		   (string-append types stamps transformed))])
+		   (string-append (generate-type-definitions-code) stamps
+				  (generate-runtime-code) transformed))])
     (make-thunk path)))
 
 (define (parse-and-graphviz code)
@@ -100,8 +102,8 @@
 						      "-lsisal" "-lm")])
 	      (subprocess-wait sp)
 	      (close-output-port in)(close-input-port out)(close-input-port err)
-	      (delete-file code-file)(delete-file csrc-file)
-	      (delete-file cobj-file)(delete-file code-prefix)
+	      ;(delete-file code-file)(delete-file csrc-file)
+	      ;(delete-file cobj-file)(delete-file code-prefix)
 	      (if (file-exists? clib-file)
 		clib-file
 		(error "Could not compile dylib")))
@@ -164,9 +166,15 @@
       (if val-node
 	(values boundary val-node)
 	(error (~a exp " is undefined!"))))
-    (let ((node (make-literal-node exp)))
-      (let-values ([(boundary label) (add-node boundary node)])
-	(values boundary label)))))
+    (let*-values ([(lit-node build-node) (values (make-literal-node exp)
+						 (make-simple-node 143))]
+		  [(type-lbl type-idx) (cond ((integer? exp) (values int-lbl
+								     typedval-int-idx))
+					     (else (error "Unknown error")))]
+		  [(gb blbl) (add-node boundary build-node)]
+		  [(gb llbl) (add-node gb lit-node)]
+		  [(gb) (add-edge gb llbl 1 blbl type-idx type-lbl)])
+      (values gb blbl))))
 
 (define (application? exp)
   (list? exp))
@@ -176,24 +184,26 @@
 	 (operands (cdr exp))
 	 (native (hash-ref natives operator #f)))
     (cond ((not native) (error "Only native functions supported!"))
-	  ((not (or (= (length operands) (inputs native))
-		    (reducible? native)))
+	  ((not (or (= (length operands) (native-inputs native))
+		    (native-reducible? native)))
 	   (error "Incorrect amount of arguments for function!"))
-	  ((and (> (length operands) (inputs native))
-		(reducible? native))
+	  ((and (> (length operands) (native-inputs native))
+		(native-reducible? native))
 	   (parse-application boundary (reduce exp) env))
-	  (else (let*-values ([(boundary inputs)
-			       (parse-operands boundary operands env)]
-			      [(boundary oplabel)
-			       (add-node boundary native)])
+	  (else (let*-values
+		  ([(gb inputs) (parse-operands boundary operands env)]
+		   [(gb call-lbl) (add-node gb (make-simple-node 120))]
+		   [(gb litt-lbl) (add-node gb (make-literal-node (native-name native)))]
+		   [(gb) (add-edge gb litt-lbl 1 call-lbl 1 (native-type-lbl native))])
 		  (values (car (foldl (lambda (input boundary)
 					(cons (add-edge (car boundary)
-							input 1
-							oplabel (cdr boundary))
+							     input 1
+							     call-lbl (cdr boundary)
+							     typedval-lbl)
 					      (+ 1 (cdr boundary))))
-				      (cons boundary 1)
+				      (cons gb 2)
 				      inputs))
-			  oplabel))))))
+			  call-lbl))))))
 
 (define (reduce exp)
   (let ((op (car exp)))
@@ -223,7 +233,8 @@
 ;; Transforms abstract graph-boundary to IF1 code.
 (define (transform-boundary boundary result-node)
   (~a
-    (foldl-nodes boundary "X 10 \"main\"\n"
+    (foldl-nodes boundary 
+		 (~a "X " main-fun-lbl " \"main\"\n")
 		 (lambda (label node res)
 		   (string-append
 		     res
@@ -231,7 +242,7 @@
 		       ((literal-node? node) (transform-literal-node boundary node label))
 		       ((simple-node? node) (transform-simple-node boundary node label))
 		       (else (transform-compound-node boundary node label))))))
-    "E " result-node " 1 0 1 4\n"))
+    "E " result-node " 1 0 1 " typedval-lbl "\n"))
 
 (define (transform-simple-node boundary node label)
   (let ((opcode (opcode node)))
@@ -240,20 +251,18 @@
 		 (lambda (edge res)
 		   (string-append
 		     res
-		     (~a "E " label
-			 " " (edge-in-port edge)
-			 " " (edge-out-node edge)
-			 " " (edge-out-port edge)
-			 " 4\n"))))))
-
+		     (format "E ~s ~s ~s ~s ~s\n"
+			     label (edge-in-port edge)
+			     (edge-out-node edge) (edge-out-port edge)
+			     (edge-type-lbl edge)))))))
 
 (define (transform-literal-node boundary node label)
   (let ((value (value node)))
     (foldl-edges boundary label
 		 "" (lambda (edge res)
-		      (~a "L " (edge-out-node edge)
-			  " "  (edge-out-port edge)
-			  " 4 \"" value "\"\n")))))
+		      (format "L ~s ~s ~s \"~s\"\n"
+			      (edge-out-node edge) (edge-out-port edge)
+			      (edge-type-lbl edge) value)))))
 
 (define (transform-compound-node boundary label)
   "")

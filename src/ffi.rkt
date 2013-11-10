@@ -29,9 +29,9 @@
   (let read-output ((res (fgetc fs))
 		    (out '()))
     (if (= res -1)
-      (read (open-input-bytes
-	      (list->bytes
-		(reverse out))))
+      #|(read (open-input-bytes
+	      (list->bytes (reverse out))))|#
+      (bytes->string/utf-8 (list->bytes (reverse out)))
       (read-output (fgetc fs) (cons res out)))))
 
 (define (make-thunk lib)

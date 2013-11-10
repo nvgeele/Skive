@@ -43,7 +43,7 @@
 				  (= port (edge-out-port edge))))
 	      (edges gb))))
 
-(define (add-edge gb in-id in-port out-id out-port)
+(define (add-edge gb in-id in-port out-id out-port [type-lbl #f])
   (let ((nodes (nodes gb))
 	(edges (edges gb)))
     (cond ((or (null? (hash-ref nodes in-id null))
@@ -53,8 +53,12 @@
 	   (error "One of the ports is already connected!"))
 	  (else
 	    (struct-copy graph-boundary gb
-			 [edges (cons (make-edge in-id in-port
-						 out-id out-port)
+			 [edges (cons (if type-lbl
+					(make-edge in-id in-port
+						   out-id out-port
+						   type-lbl)
+					(make-edge in-id in-port
+						   out-id out-port))
 				      edges)])))))
 ;; proc: label node -> any
 (define (for-each-node gb proc)

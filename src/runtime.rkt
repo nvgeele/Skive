@@ -2,6 +2,8 @@
 
 (require "typing.rkt")
 
+(provide generate-runtime-code)
+
 (define is_num
   (~a
 "G	" type-check-fun-lbl "	\"is_num\"
@@ -128,7 +130,7 @@ E	1 1	0 1	" bool-lbl "\n"))
 
 (define get_car
   (~a
-"G	" binary-typedval-fun-lbl "	\"get_car\"
+"G	" unary-typedval-fun-lbl "	\"get_car\"
 { Compound   1   2
 G	0
 N 1	144
@@ -142,7 +144,7 @@ E	1 1	0 1	" typedval-lbl "\n"))
 
 (define get_cdr
   (~a
-"G	" binary-typedval-fun-lbl "	\"get_cdr\"
+"G	" unary-typedval-fun-lbl "	\"get_cdr\"
 { Compound   1   2
 G	0
 N 1	144
