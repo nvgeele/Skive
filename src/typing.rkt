@@ -8,7 +8,8 @@
 	 conscell-lbl
 	 conscell-car-idx conscell-cdr-idx
 	 type-check-fun-lbl
-	 binary-typedval-fun-lbl)
+	 binary-typedval-fun-lbl
+	 generate-type-definitions-code)
 
 (struct type-table (table)
 	#:transparent)
@@ -70,6 +71,9 @@
       (apply make-tuple-definition
 	     (+ 1 label) (car typen) (cdr typen)))))
 
+(define (extend-tuple-definition label tuple type)
+  (format "T ~s 8 ~s ~s\n" label type tuple))
+
 (define (make-union-definition label type1 . typen)
   (string-append
     (format "T ~s 9 ~s\n" label (+ label 1))
@@ -83,5 +87,31 @@
 (define (make-function-definition label in-lbl out-lbl)
   (format "T ~s 3 ~s ~s\n" label in-lbl out-lbl))
 
-(define (generate-type-definitions type-table)
-  '())
+(define (generate-type-definitions-code); type-table)
+  (string-append
+    (make-basic-type-definition bool-lbl  0)
+    (make-basic-type-definition char-lbl  1)
+    (make-basic-type-definition float-lbl 2)
+    (make-basic-type-definition int-lbl   3)
+    (make-basic-type-definition null-lbl  4)
+
+    (make-array-definition string-lbl char-lbl)
+
+    (make-union-definition typedval-lbl
+			   null-lbl int-lbl
+			   float-lbl string-lbl
+			   bool-lbl conscell-lbl)
+
+    (make-record-definition conscell-lbl typedval-lbl typedval-lbl)
+
+    (make-tuple-definition single-typedval-tuple-lbl typedval-lbl)
+    (make-tuple-definition single-bool-tuple-lbl bool-lbl)
+
+    (extend-tuple-definition double-typedval-tuple-lbl single-typedval-tuple-lbl typedval-lbl)
+
+    (make-function-definition type-check-fun-lbl
+			      single-typedval-tuple-lbl
+			      single-bool-tuple-lbl)
+    (make-function-definition binary-typedval-fun-lbl
+			      double-typedval-tuple-lbl
+			      single-typedval-tuple-lbl)))
