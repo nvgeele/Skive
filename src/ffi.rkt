@@ -1,7 +1,8 @@
 #!racket
 
 (require ffi/unsafe
-	 ffi/unsafe/define)
+	 ffi/unsafe/define
+	 "typing.rkt")
 
 (provide make-thunk)
 
@@ -33,6 +34,34 @@
 	      (list->bytes (reverse out))))|#
       (bytes->string/utf-8 (list->bytes (reverse out)))
       (read-output (fgetc fs) (cons res out)))))
+
+(define (read-until input delim)
+  (let ((delim (if (string? delim) (string-ref delim 0) delim)))
+  (let loop ((res '()))
+    (let ((char (read-char input)))
+      (cond ((or (eof-object? char)
+		 (char=? char delim))
+	     (list->string (reverse res)))
+	    ((char-whitespace? char) (loop res))
+	    (else (loop (cons char res))))))))
+
+(define (read-fibre str)
+  (let ((input (open-input-string str)))
+    ;; We could also use read-char, but #\( messes up
+    ;; my vim syntax highlighting
+    (case (read-string 1 input)
+      [("(") (let ((id (string->number (string-trim (read-until input #\:)))))
+	       (cond 
+		 ((= id (- typedval-bool-idx 1)) 'bool)
+		 ((= id (- typedval-string-idx 1)) 'string)
+		 ((= id (- typedval-float-idx 1)) 'float)
+		 ((= id (- typedval-int-idx 1))
+		  (string->number (string-trim (read-until input ")"))))
+		 ((= id (- typedval-null-idx 1))
+		  null)
+		 ((= id (- typedval-cons-idx 1)) 'cons)
+		 (else (error "Incorrect FIBRE syntax(2)"))))]
+      [else (error "Incorrect FIBRE syntax(1)")])))
 
 (define (make-thunk lib)
   (let-values ([(s-lib) (ffi-lib lib)]
@@ -81,4 +110,4 @@
 	(StopWorkers)
 	(WriteFibreOutputs (get-ffi-obj "SisalMainArgs" s-lib _pointer))
 	(fflush out-fs)
-	(read-from-fs in-fs)))))
+	(read-fibre (read-from-fs in-fs))))))

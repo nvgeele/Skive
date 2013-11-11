@@ -158,7 +158,8 @@
 
 (define (self-evaluating? exp)
   (or (integer? exp)
-      (symbol? exp)))
+      (symbol? exp)
+      (string? exp)))
 
 (define (parse-self-evaluating boundary exp env)
   (if (symbol? exp)
@@ -170,6 +171,8 @@
 						 (make-simple-node 143))]
 		  [(type-lbl type-idx) (cond ((integer? exp) (values int-lbl
 								     typedval-int-idx))
+					     ((string? exp) (values string-lbl
+								    typedval-string-idx))
 					     (else (error "Unknown error")))]
 		  [(gb blbl) (add-node boundary build-node)]
 		  [(gb llbl) (add-node gb lit-node)]
