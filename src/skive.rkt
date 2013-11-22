@@ -1,6 +1,7 @@
 #!racket
 
-(require "node.rkt"
+(require "syntax.rkt"
+	 "node.rkt"
 	 "edge.rkt"
 	 "compound-node.rkt"
 	 "graph-boundary.rkt"
@@ -132,16 +133,6 @@
 	(values gb result-node)
 	(loop gb (car rem) (cdr rem))))))
 
-(define (let? exp)
-  (and (list? exp)
-       (eq? (car exp) 'let)))
-
-(define (let-definitions exp)
-  (cadr exp))
-
-(define (let-body exp)
-  (cddr exp))
-
 (define (parse-let gb exp env)
   (let ((let-defs (let-definitions exp))
 	(let-body (let-body exp)))
@@ -155,11 +146,6 @@
 	   (gb (car s))
 	   (env (cdr s)))
       (parse-sequence gb let-body env))))
-
-(define (self-evaluating? exp)
-  (or (integer? exp)
-      (symbol? exp)
-      (string? exp)))
 
 (define (parse-self-evaluating boundary exp env)
   (if (symbol? exp)
@@ -178,9 +164,6 @@
 		  [(gb llbl) (add-node gb lit-node)]
 		  [(gb) (add-edge gb llbl 1 blbl type-idx type-lbl)])
       (values gb blbl))))
-
-(define (application? exp)
-  (list? exp))
 
 (define (parse-application boundary exp env)
   (let* ((operator (car exp))
