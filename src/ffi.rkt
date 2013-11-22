@@ -36,32 +36,74 @@
       (read-output (fgetc fs) (cons res out)))))
 
 (define (read-until input delim)
-  (let ((delim (if (string? delim) (string-ref delim 0) delim)))
   (let loop ((res '()))
     (let ((char (read-char input)))
       (cond ((or (eof-object? char)
 		 (char=? char delim))
 	     (list->string (reverse res)))
 	    ((char-whitespace? char) (loop res))
-	    (else (loop (cons char res))))))))
+	    (else (loop (cons char res)))))))
 
 (define (read-fibre str)
   (let ((input (open-input-string str)))
-    ;; We could also use read-char, but #\( messes up
-    ;; my vim syntax highlighting
-    (case (read-string 1 input)
-      [("(") (let ((id (string->number (string-trim (read-until input #\:)))))
+    (case (read-char input)
+      [(#\u28) (let ((id (string->number (string-trim (read-until input #\:)))))
 	       (cond 
 		 ((= id (- typedval-bool-idx 1)) 'bool)
 		 ((= id (- typedval-string-idx 1)) 'string)
 		 ((= id (- typedval-float-idx 1)) 'float)
 		 ((= id (- typedval-int-idx 1))
-		  (string->number (string-trim (read-until input ")"))))
+		  (string->number (string-trim (read-until input #\u29))))
 		 ((= id (- typedval-null-idx 1))
 		  null)
 		 ((= id (- typedval-cons-idx 1)) 'cons)
 		 (else (error "Incorrect FIBRE syntax(2)"))))]
       [else (error "Incorrect FIBRE syntax(1)")])))
+
+(define (scan-number input c)
+  '*num*)
+;  (let loop ((res (list c))
+;	     (c (peek-char input)))
+;    (cond ((char-numeric? c)
+;	   (loop (cons (read-char input))
+;		 (peek-char input)))
+
+(define (make-fibre-scanner str)
+  (display str)
+  (letrec ((input (open-input-string str))
+	   (scanner
+	     (lambda (input)
+	       (let ((c (read-char input)))
+		 (cond ((eof-object? c)
+			(values c (lambda () (scanner input))))
+		       ((char-whitespace? c)
+			(scanner input))
+		       ((char=? c #\u28) ;; (
+			(values '(lpar) (lambda () (scanner input))))
+		       ((char=? c #\u29) ;; )
+			(values '(rpar) (lambda () (scanner input))))
+		       ((char=? c #\u3c) ;; <
+			(values '(st) (lambda () (scanner input))))
+		       ((char=? c #\u3e) ;; >
+			(values '(gt) (lambda () (scanner input))))
+		       ((char=? c #\u3a)
+			(values '(col) (lambda () (scanner input))))
+		       ((char-numeric? c)
+			(values `(num ,(scan-number input c)) (lambda () (scanner input))))
+		       ((char=? c #\u23)
+			(read-line input) ;; drop all the rubbish
+			(scanner input)))))))
+    (lambda ()
+      (scanner input))))
+
+(define (parse-fibre-input str)
+  (let loop ((scanner (make-fibre-scanner str))
+	     (res '()))
+    (let-values ([(token scanner) (scanner)])
+      (if (eof-object? token)
+	res
+	(begin (display token)(newline)
+	       (loop scanner res))))))
 
 (define (make-thunk lib)
   (let-values ([(s-lib) (ffi-lib lib)]
@@ -110,4 +152,8 @@
 	(StopWorkers)
 	(WriteFibreOutputs (get-ffi-obj "SisalMainArgs" s-lib _pointer))
 	(fflush out-fs)
-	(read-fibre (read-from-fs in-fs))))))
+	;(read-fibre (read-from-fs in-fs))
+	(let ((str (read-from-fs in-fs)))
+	  ;(make-fibre-scanner str))
+	  (parse-fibre-input str))
+	))))
