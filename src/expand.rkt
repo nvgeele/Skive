@@ -1,16 +1,19 @@
 #!racket
 
-(require "syntax.rkt")
+(require "syntax.rkt"
+	 "natives.rkt")
 
 (provide expand)
 
 ;; car := arguments needed
 ;; cdr := neutral element
 (define reducible
-  (hash '+ '(2 . 0)
-	'- '(2 . 0)
-	'* '(2 . 0)
-	'/ '(2 . 0)))
+  (foldl (lambda (native hash)
+	   (if (native-reducible? (cdr native))
+	     (hash-set hash (car native) (cdr native))
+	     hash))
+	 (hash)
+	 (hash->list natives)))
 
 (define (expand exp)
   (cond ((self-evaluating? exp)
@@ -32,14 +35,14 @@
 	 (let ((red (hash-ref reducible (appl-op exp) #f))
 	       (len (length (appl-args exp))))
 	   (if red
-	     (cond ((= len (car red))
+	     (cond ((= len (native-inputs red))
 		    `(,(appl-op exp) ,@(map expand (appl-args exp))))
-		   ((< len (car red))
+		   ((< len (native-inputs red))
 		    (error "Not enough arguments -- expand"))
-		   ((> len (car red))
+		   ((> len (native-inputs red))
 		    (expand
 		      (reduce (appl-op exp) (appl-args exp)
-			      (car red) (cdr red)))))
+			      (native-inputs red) (native-neutral red)))))
 	     (map expand exp))))
 	(else (error (~a "Incorrect expression -- expand\n\t\""
 			 exp "\"")))))
