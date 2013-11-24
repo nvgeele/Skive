@@ -27,7 +27,7 @@
 	((or? exp)
 	 (expand-reduce (expand-or exp)))
 	((and? exp)
-	 (expand-and exp))
+	 (expand-reduce (expand-and exp)))
 	((application? exp)
 	 (let ((red (hash-ref reducible (appl-op exp) #f))
 	       (len (length (appl-args exp))))
@@ -68,14 +68,14 @@
 	      (if (null? res)
 		`(,op ,@(append rest ;(map expand-reduce rest)
 				(make-list (- num-args len) neutral)))
-		 `(let ,(cons `(,(string->symbol (~a "let_" i))
-				 (,op ,@(append rest ;(map expand-reduce rest)
-						(make-list (- num-args len) neutral))))
-			      res)
-		    ,(reduce* `(,op ,@(map (lambda (i)
-					     (string->symbol (~a "let_" i)))
-					   (range 0 (+ i 1))))
-			      num-args neutral))))))))
+		`(let ,(cons `(,(string->symbol (~a "let_" i))
+				(,op ,@(append rest ;(map expand-reduce rest)
+					       (make-list (- num-args len) neutral))))
+			     res)
+		   ,(reduce* `(,op ,@(map (lambda (i)
+					    (string->symbol (~a "let_" i)))
+					  (range 0 (+ i 1))))
+			     num-args neutral))))))))
 
 (define (reduce* exp num-args neutral)
   (let ((op (car exp))
@@ -97,22 +97,31 @@
 ;; return values that aren't booleans. The Scheme behaviour.
 ;; However, this has a higher impact on performance...
 (define (expand-or exp)
-  (let* ((exp (reduce* exp 2 #f))
-	 (args (cdr exp)))
-    (let loop ((exp '())
-	       (i 0))
-      (let ((sym (string->symbol (~a "let_" i))))
-	`(let ((,sym ,(car args)))
-	   (if ,sym
-	     ,sym
-	     ,(if (or? (cadr args))
-		(expand-or (cadr args))
-		(cadr args))))))))
+  (let do-expand ((args (cdr (reduce* exp 2 #f)))
+		  (i 0))
+    (let ((sym (string->symbol (~a "let_" i))))
+      `(let ((,sym ,(car args)))
+	 (if ,sym
+	   ,sym
+	   ,(if (or? (cadr args))
+	      (do-expand (cdadr args) (+ i 1))
+	      (cadr args)))))))
 
+;; Why do we always +1 the symbol? So we don't need to go
+;; back to previous frames.
 (define (expand-and exp)
-  (let* ((exp (reduce* exp 2 #t))
-	 (args (cdr exp)))
-    (let loop ((exp '()))
-      '())))
+  (let do-expand ((args (cdr (reduce* exp 2 #t)))
+		  (i 0))
+    (let ((sym1 (string->symbol (~a "let_" i)))
+	  (sym2 (string->symbol (~a "let_" (+ i 1)))))
+      `(let ((,sym1 ,(car args)))
+	 (if ,sym1
+	   (let ((,sym2 ,(if (and? (cadr args))
+			   (do-expand (cdadr args) (+ i 2))
+			   (cadr args))))
+	     ,sym2)
+	   #f)))))
 
 ;;; (expand-reduce '(let ((a 1) (b 2)) (* a b (let ((c 1)) c)) ((lambda (x) x) 1)))
+;;; (let ((exp (expand-reduce '(or 1 2 3 3 4)))) (display exp)(newline)(eval exp))
+;;; (let ((exp (expand-reduce '(or 1 2 3 3 (display "test"))))) (display exp)(newline)(eval exp))
