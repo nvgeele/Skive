@@ -1,6 +1,7 @@
 #!racket
 
 (require "syntax.rkt"
+	 "expand.rkt"
 	 "node.rkt"
 	 "edge.rkt"
 	 "compound-node.rkt"
@@ -28,28 +29,35 @@
   (syntax-rules ()
     [(define-skive (name) . body)
      (define name
-       (let-values ([(gb result-node) (parse-sequence (make-graph-boundary "main" #t)
-						      (quote body) (hash))])
-	 (let* ((transformed (transform-boundary gb result-node))
-		(path (compile-native #:type 'lib ;compile-to-dylib
-			(string-append (generate-type-definitions-code)
-				       stamps (generate-runtime-code)
-				       transformed))))
-	   (make-thunk path))))]))
+       (let* ((code (compile-if1 (quote body)))
+	      (lib (compile-native code #:type 'lib)))
+	 (make-thunk lib)))]))
 
 ;; Currently parses all into one boundary
 ;; => needs to be program when typing and
 ;; environments etc are implemented(?)
-(define (compile code)
-  (let*-values ([(gb result-node)
-		 (parse code)]
+;; !!! accepts a sequence of expressions !!!
+(define (compile-if1 code)
+  (let*-values ([(expanded)
+		 (map expand code)]
+		[(gb result-node)
+		 (let ((res (foldl (lambda (exp cell)
+				     (let-values ([(gb res)
+						   (parse-boundary
+						     (car cell)
+						     exp)])
+				       (cons gb res)))
+				   (cons (make-graph-boundary "main") 0)
+				   expanded)))
+		   (values (car res) (cdr res)))]
 		[(transformed)
 		 (transform-boundary gb result-node)]
-		[(path)
-		 (compile-native #:type 'lib
-		   (string-append (generate-type-definitions-code) stamps
-				  (generate-runtime-code) transformed))])
-    (make-thunk path)))
+		[(code)
+		 (string-append (generate-type-definitions-code)
+				stamps
+				(generate-runtime-code)
+				transformed)])
+    code))
 
 (define (parse-and-graphviz code)
   (let*-values ([(dotfile)
@@ -118,81 +126,48 @@
 	    (error "Could not compile C source to object file -- compile-native")))
 	(error "Could not create C source file -- compile-native")))))
 
-(define (parse exp)
-  (parse-boundary (make-graph-boundary "main")
-		  exp (hash)))
-
-(define (parse-boundary gb exp env)
+(define (parse-boundary gb exp)
   (cond ((self-evaluating? exp)
-	 (parse-self-evaluating gb exp env))
-	((let? exp)
-	 (parse-let gb exp env))
+	 (parse-self-evaluating gb exp))
 	((application? exp)
-	 (parse-application gb exp env))
+	 (parse-application gb exp))
 	(else (error "Incorrect expression -- parse-boundary"))))
 
-(define (parse-sequence gb exps env)
-  (let loop ((gb gb)
-	     (cur (car exps))
-	     (rem (cdr exps)))
-    (let-values ([(gb result-node) (parse-boundary gb cur env)])
-      (if (null? rem)
-	(values gb result-node)
-	(loop gb (car rem) (cdr rem))))))
+(define (parse-self-evaluating boundary exp)
+  (let*-values ([(lit-node build-node) (values (make-literal-node exp)
+					       (make-simple-node 143))]
+		[(type-lbl type-idx) (cond ((integer? exp) (values int-lbl
+								   typedval-int-idx))
+					   ((string? exp) (values string-lbl
+								  typedval-string-idx))
+					   (else (error "Unknown error")))]
+		[(gb blbl) (add-node boundary build-node)]
+		[(gb llbl) (add-node gb lit-node)]
+		[(gb) (add-edge gb llbl 1 blbl type-idx type-lbl)])
+    (values gb blbl)))
 
-(define (parse-let gb exp env)
-  (let ((let-defs (let-definitions exp))
-	(let-body (let-body exp)))
-    (let* ((s (foldl (lambda (def p)
-		       (let ((gb (car p))(env (cdr p))
-			     (sym (car def))(exp (cadr def)))
-			 (let-values ([(gb result-node) (parse-boundary gb exp env)])
-			   (cons gb (hash-set env sym result-node)))))
-		     (cons gb env)
-		     let-defs))
-	   (gb (car s))
-	   (env (cdr s)))
-      (parse-sequence gb let-body env))))
-
-(define (parse-self-evaluating boundary exp env)
-  (if (symbol? exp)
-    (let ((val-node (hash-ref env exp #f)))
-      (if val-node
-	(values boundary val-node)
-	(error (~a exp " is undefined!"))))
-    (let*-values ([(lit-node build-node) (values (make-literal-node exp)
-						 (make-simple-node 143))]
-		  [(type-lbl type-idx) (cond ((integer? exp) (values int-lbl
-								     typedval-int-idx))
-					     ((string? exp) (values string-lbl
-								    typedval-string-idx))
-					     (else (error "Unknown error")))]
-		  [(gb blbl) (add-node boundary build-node)]
-		  [(gb llbl) (add-node gb lit-node)]
-		  [(gb) (add-edge gb llbl 1 blbl type-idx type-lbl)])
-      (values gb blbl))))
-
-(define (parse-application boundary exp env)
+(define (parse-application boundary exp)
   (let* ((operator (car exp))
 	 (operands (cdr exp))
 	 (native (hash-ref natives operator #f)))
+    (display operator)(newline)
     (cond ((not native) (error "Only native functions supported!"))
 	  ((not (or (= (length operands) (native-inputs native))
 		    (native-reducible? native)))
 	   (error "Incorrect amount of arguments for function!"))
 	  ((and (> (length operands) (native-inputs native))
 		(native-reducible? native))
-	   (parse-application boundary (reduce exp) env))
+	   (parse-application boundary (reduce exp)))
 	  (else (let*-values
-		  ([(gb inputs) (parse-operands boundary operands env)]
+		  ([(gb inputs) (parse-operands boundary operands)]
 		   [(gb call-lbl) (add-node gb (make-simple-node 120))]
 		   [(gb litt-lbl) (add-node gb (make-literal-node (native-name native)))]
 		   [(gb) (add-edge gb litt-lbl 1 call-lbl 1 (native-type-lbl native))])
 		  (values (car (foldl (lambda (input boundary)
 					(cons (add-edge (car boundary)
-							     input 1
-							     call-lbl (cdr boundary)
-							     typedval-lbl)
+							input 1
+							call-lbl (cdr boundary)
+							typedval-lbl)
 					      (+ 1 (cdr boundary))))
 				      (cons gb 2)
 				      inputs))
@@ -211,14 +186,14 @@
 ;; Accepts a graph-boundary and a list of operands.
 ;; Returns boundary with nodes/edges of operands added
 ;; and a list of the operands' node labels.
-(define (parse-operands boundary operands env)
+(define (parse-operands boundary operands)
   (if (null? operands)
     (values boundary '())
     (let loop ((boundary boundary)
 	       (inputs '())
 	       (cur (car operands))
 	       (rem (cdr operands)))
-      (let-values ([(gb link) (parse-boundary boundary cur env)])
+      (let-values ([(gb link) (parse-boundary boundary cur)])
 	(if (null? rem)
 	  (values gb (reverse (cons link inputs)))
 	  (loop gb (cons link inputs) (car rem) (cdr rem)))))))
