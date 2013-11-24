@@ -31,7 +31,7 @@
        (let-values ([(gb result-node) (parse-sequence (make-graph-boundary "main" #t)
 						      (quote body) (hash))])
 	 (let* ((transformed (transform-boundary gb result-node))
-		(path (compile-to-dylib
+		(path (compile-native #:type 'lib ;compile-to-dylib
 			(string-append (generate-type-definitions-code)
 				       stamps (generate-runtime-code)
 				       transformed))))
@@ -42,11 +42,11 @@
 ;; environments etc are implemented(?)
 (define (compile code)
   (let*-values ([(gb result-node)
-		 (parse (make-graph-boundary "main" #t) code)]
+		 (parse code)]
 		[(transformed)
 		 (transform-boundary gb result-node)]
 		[(path)
-		 (compile-to-dylib
+		 (compile-native #:type 'lib
 		   (string-append (generate-type-definitions-code) stamps
 				  (generate-runtime-code) transformed))])
     (make-thunk path)))
@@ -71,12 +71,17 @@
 	(display pngfile)
 	(display "Could not create png file")))))
 
-(define (compile-to-dylib code)
+;; TODO: add additional paramter to supply output path
+(define (compile-native code #:type [type 'exe])
   (let* ((code-prefix (path->string (make-temporary-file "skiveif1~a" #f "/tmp")))
 	 (code-file (string-append code-prefix ".if1"))
 	 (csrc-file (string-append code-prefix ".c"))
 	 (cobj-file (string-append code-prefix ".o"))
-	 (clib-file (string-append code-prefix ".dylib"))
+	 (out-file (string-append code-prefix
+				  (case type
+				    [(exe) ""]
+				    [(lib) ".dylib"]
+				    [else (error "Incorrect output type -- compile-native")])))
 	 (out (open-output-file code-file #:exists 'truncate)))
     (display code out)
     (close-output-port out)
@@ -96,20 +101,22 @@
 	  (if (file-exists? cobj-file)
 	    (let-values ([(sp out in err) (subprocess #f #f #f
 						      gcc-path
-						      "-o" clib-file
+						      "-o" out-file
 						      runtime-object-path
 						      cobj-file
+						      (if (eq? type 'lib)
+							"-dynamiclib" "")
 						      (~a "-L" sisal-lib-path)
 						      "-lsisal" "-lm")])
 	      (subprocess-wait sp)
 	      (close-output-port in)(close-input-port out)(close-input-port err)
-	      ;(delete-file code-file)(delete-file csrc-file)
-	      ;(delete-file cobj-file)(delete-file code-prefix)
-	      (if (file-exists? clib-file)
-		clib-file
-		(error "Could not compile dylib")))
-	    (error "Could not compile C source to object file")))
-	(error "Could not create C source file.")))))
+	      (delete-file code-file)(delete-file csrc-file)
+	      (delete-file cobj-file)(delete-file code-prefix)
+	      (if (file-exists? out-file)
+		out-file
+		(error "Could not compile output file -- compile-native")))
+	    (error "Could not compile C source to object file -- compile-native")))
+	(error "Could not create C source file -- compile-native")))))
 
 (define (parse exp)
   (parse-boundary (make-graph-boundary "main")
@@ -122,7 +129,7 @@
 	 (parse-let gb exp env))
 	((application? exp)
 	 (parse-application gb exp env))
-	(else (error "Incorrect expression"))))
+	(else (error "Incorrect expression -- parse-boundary"))))
 
 (define (parse-sequence gb exps env)
   (let loop ((gb gb)
