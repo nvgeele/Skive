@@ -2,7 +2,8 @@
 
 (provide self-evaluating?
 	 application? appl-op appl-args
-	 let? let-definitions let-body)
+	 let? let-definitions let-body
+	 or? and?)
 
 (define (self-evaluating? exp)
   (or (integer? exp)
@@ -43,3 +44,12 @@
   (cddr exp))
 
 ;;;; If expressions
+
+;;;; and/or
+(define (or? exp)
+  (and (list? exp)
+       (eq? (car exp) 'or)))
+
+(define (and? exp)
+  (and (list? exp)
+       (eq? (car exp) 'and)))
