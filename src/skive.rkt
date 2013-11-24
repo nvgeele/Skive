@@ -67,7 +67,7 @@
 		[(pngfile)
 		 (string-append dotfile ".png")]
 		[(gb result-node)
-		 (parse-boundary (make-graph-boundary "main") code (hash))])
+		 (parse-boundary (make-graph-boundary "main") code)])
     (display (graph-boundary->dot-file gb) output)
     (close-output-port output)
     (let-values ([(sp out in err) (subprocess #f #f #f
@@ -150,7 +150,6 @@
   (let* ((operator (car exp))
 	 (operands (cdr exp))
 	 (native (hash-ref natives operator #f)))
-    (display operator)(newline)
     (cond ((not native) (error "Only native functions supported!"))
 	  ((not (or (= (length operands) (native-inputs native))
 		    (native-reducible? native)))
