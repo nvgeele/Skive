@@ -2,7 +2,7 @@
 
 (require "syntax.rkt")
 
-(provide expand-reduce)
+(provide expand)
 
 ;; car := arguments needed
 ;; cdr := neutral element
@@ -12,7 +12,7 @@
 	'* '(2 . 0)
 	'/ '(2 . 0)))
 
-(define (expand-reduce exp)
+(define (expand exp)
   (cond ((self-evaluating? exp)
 	 exp)
 	((let? exp)
@@ -22,26 +22,26 @@
 		(body (let-body exp)))
 	   `((lambda
 	       ,vars
-	       ,@(map expand-reduce body))
-	     ,@(map expand-reduce args))))
+	       ,@(map expand body))
+	     ,@(map expand args))))
 	((or? exp)
-	 (expand-reduce (expand-or exp)))
+	 (expand (expand-or exp)))
 	((and? exp)
-	 (expand-reduce (expand-and exp)))
+	 (expand (expand-and exp)))
 	((application? exp)
 	 (let ((red (hash-ref reducible (appl-op exp) #f))
 	       (len (length (appl-args exp))))
 	   (if red
 	     (cond ((= len (car red))
-		    `(,(appl-op exp) ,@(map expand-reduce (appl-args exp))))
+		    `(,(appl-op exp) ,@(map expand (appl-args exp))))
 		   ((< len (car red))
-		    (error "Not enough arguments -- expand-reduce"))
+		    (error "Not enough arguments -- expand"))
 		   ((> len (car red))
-		    (expand-reduce
+		    (expand
 		      (reduce (appl-op exp) (appl-args exp)
 			      (car red) (cdr red)))))
-	     (map expand-reduce exp))))
-	(else (error (~a "Incorrect expression -- expand-reduce\n\t\""
+	     (map expand exp))))
+	(else (error (~a "Incorrect expression -- expand\n\t\""
 			 exp "\"")))))
 
 (define (reduce op args num-args neutral)
@@ -52,13 +52,13 @@
       (cond ((> len num-args)
 	     (loop
 	       (cons `(,(string->symbol (~a "let_" i))
-			(,op ,@(take rest num-args))) ;,@(map expand-reduce (take rest num-args))))
+			(,op ,@(take rest num-args))) ;,@(map expand (take rest num-args))))
 		     res)
 	       (list-tail rest num-args)
 	       (+ i 1)))
 	    ((= len num-args)
 	     `(let ,(cons `(,(string->symbol (~a "let_" i))
-			     (,op ,@(take rest num-args))) ;,@(map expand-reduce (take rest num-args))))
+			     (,op ,@(take rest num-args))) ;,@(map expand (take rest num-args))))
 			  res)
 		,(reduce* `(,op ,@(map (lambda (i)
 					 (string->symbol (~a "let_" i)))
@@ -66,10 +66,10 @@
 			  num-args neutral)))
 	    (else ;(< len num-args)
 	      (if (null? res)
-		`(,op ,@(append rest ;(map expand-reduce rest)
+		`(,op ,@(append rest ;(map expand rest)
 				(make-list (- num-args len) neutral)))
 		`(let ,(cons `(,(string->symbol (~a "let_" i))
-				(,op ,@(append rest ;(map expand-reduce rest)
+				(,op ,@(append rest ;(map expand rest)
 					       (make-list (- num-args len) neutral))))
 			     res)
 		   ,(reduce* `(,op ,@(map (lambda (i)
@@ -122,6 +122,6 @@
 	     ,sym2)
 	   #f)))))
 
-;;; (expand-reduce '(let ((a 1) (b 2)) (* a b (let ((c 1)) c)) ((lambda (x) x) 1)))
-;;; (let ((exp (expand-reduce '(or 1 2 3 3 4)))) (display exp)(newline)(eval exp))
-;;; (let ((exp (expand-reduce '(or 1 2 3 3 (display "test"))))) (display exp)(newline)(eval exp))
+;;; (expand '(let ((a 1) (b 2)) (* a b (let ((c 1)) c)) ((lambda (x) x) 1)))
+;;; (let ((exp (expand '(or 1 2 3 3 4)))) (display exp)(newline)(eval exp))
+;;; (let ((exp (expand '(or 1 2 3 3 (display "test"))))) (display exp)(newline)(eval exp))
