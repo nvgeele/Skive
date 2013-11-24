@@ -24,8 +24,10 @@
 	       ,vars
 	       ,@(map expand-reduce body))
 	     ,@args)))
-	((or? exp) '())
-	((and? exp) '())
+	((or? exp)
+	 (expand-reduce (expand-or exp)))
+	((and? exp)
+	 (expand-and exp))
 	((application? exp)
 	 (let ((red (hash-ref reducible (appl-op exp) #f))
 	       (len (length (appl-args exp))))
@@ -88,5 +90,29 @@
 	      ((> len num-args)
 	       `(,op ,@(take rem (- num-args 1))
 		     ,(loop (drop rem (- num-args 1))))))))))
+
+;; We could avoid this nested mess of let-expressions in IF1,
+;; but that would change the behaviour of or. By doing or/and
+;; like this, the functions will be: 1) lazy and 2) have
+;; return values that aren't booleans. The Scheme behaviour.
+;; However, this has a higher impact on performance...
+(define (expand-or exp)
+  (let* ((exp (reduce* exp 2 #f))
+	 (args (cdr exp)))
+    (let loop ((exp '())
+	       (i 0))
+      (let ((sym (string->symbol (~a "let_" i))))
+	`(let ((,sym ,(car args)))
+	   (if ,sym
+	     ,sym
+	     ,(if (or? (cadr args))
+		(expand-or (cadr args))
+		(cadr args))))))))
+
+(define (expand-and exp)
+  (let* ((exp (reduce* exp 2 #t))
+	 (args (cdr exp)))
+    (let loop ((exp '()))
+      '())))
 
 ;;; (expand-reduce '(let ((a 1) (b 2)) (* a b (let ((c 1)) c)) ((lambda (x) x) 1)))
