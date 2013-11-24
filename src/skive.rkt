@@ -60,24 +60,27 @@
     code))
 
 (define (parse-and-graphviz code)
-  (let*-values ([(dotfile)
-		 (path->string (make-temporary-file "skivedot~a" #f "/tmp"))]
-		[(output)
-		 (open-output-file dotfile #:exists 'truncate)]
-		[(pngfile)
-		 (string-append dotfile ".png")]
+  (let*-values ([(pngfile)
+		 (path->string (make-temporary-file "skivedot~a.png" #f "/tmp"))]
+		[(file-out)
+		 (open-output-file pngfile #:exists 'truncate)]
 		[(gb result-node)
-		 (parse-boundary (make-graph-boundary "main") code)])
-    (display (graph-boundary->dot-file gb) output)
-    (close-output-port output)
-    (let-values ([(sp out in err) (subprocess #f #f #f
-					      graphviz-dot-path
-					      "-Tpng" "-O" dotfile)])
-      (subprocess-wait sp)(delete-file dotfile)
-      (close-output-port in)(close-input-port out)(close-input-port err)
-      (if (file-exists? pngfile)
-	(display pngfile)
-	(display "Could not create png file")))))
+		 (parse-boundary (make-graph-boundary "main") code)]
+		[(dotcode)
+		 (graph-boundary->dot-file gb)])
+    (let-values ([(sp out in err)
+		  (subprocess #f #f #f
+			      graphviz-dot-path
+			      "-Tpng")])
+      (display dotcode in)
+      (flush-output in)
+      (close-output-port in)
+      (subprocess-wait sp)
+      (copy-port out file-out)
+      (flush-output file-out)
+      (close-input-port err)
+      (close-input-port out)
+      pngfile)))
 
 ;; TODO: add additional paramter to supply output path
 (define (compile-native code #:type [type 'exe])
