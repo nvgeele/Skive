@@ -9,6 +9,7 @@
   (or (integer? exp)
       (string? exp)
       (symbol? exp)
+      (boolean? exp)
       (null? exp)))
 
 ;;;; Application
