@@ -23,7 +23,7 @@
 	   `((lambda
 	       ,vars
 	       ,@(map expand-reduce body))
-	     ,@args)))
+	     ,@(map expand-reduce args))))
 	((or? exp)
 	 (expand-reduce (expand-or exp)))
 	((and? exp)
