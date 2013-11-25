@@ -6,7 +6,11 @@
 
 (provide make-thunk)
 
-(define-ffi-definer define-cl (ffi-lib "libc"))
+;;;; Depends on OS/architecture(?)
+(define O_NONBLOCK 4)
+(define F_SETFL    4)
+
+(define-ffi-definer define-cl (ffi-lib #f))
 (define _file_ptr (_cpointer _file))
 
 (define-cl fdopen (_fun _int _string -> _file_ptr))
@@ -139,7 +143,7 @@
       ;; Alternative: using select(), but more work
       (let ((d (fileno in-fs)))
 	;; fcntl(d, F_SETFL, O_NONBLOCK);
-	(fcntl d 4 4))
+	(fcntl d F_SETFL O_NONBLOCK))
       (set-ffi-obj! "FibreOutFd" s-lib
 		    _file_ptr out-fs)
       (ParseCommandLine 0 "null")
