@@ -104,6 +104,7 @@
       (if (file-exists? csrc-file)
 	(let-values ([(sp out in err) (subprocess #f #f #f
 						  gcc-path csrc-file
+						  "-fPIC"
 						  "-c" "-o" cobj-file
 						  (~a "-I" sisal-include-path)
 						  "-g" "-O2")])
@@ -116,7 +117,7 @@
 						      runtime-object-path
 						      cobj-file
 						      (if (eq? type 'lib)
-							"-dynamiclib" "")
+							"-shared" "")
 						      (~a "-L" sisal-lib-path)
 						      "-lsisal" "-lm")])
 	      (subprocess-wait sp)
