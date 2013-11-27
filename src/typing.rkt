@@ -1,54 +1,55 @@
 #lang racket
 
-(provide bool-lbl char-lbl float-lbl int-lbl
-	 null-lbl string-lbl
-	 typedval-lbl
-	 typedval-null-idx typedval-int-idx typedval-float-idx
-	 typedval-string-idx typedval-bool-idx typedval-cons-idx
-	 conscell-lbl
-	 conscell-car-idx conscell-cdr-idx
-	 type-check-fun-lbl
-	 binary-typedval-fun-lbl
-	 unary-typedval-fun-lbl
+(provide function-lbl
+	 call-function-lbl
 	 main-fun-lbl
 	 generate-type-definitions-code)
-
-(struct type-table (table)
-	#:transparent)
-
-(define (make-type-table)
-  (type-table (hash)))
-
-(define table type-table-table)
 
 (define bool-lbl   1)
 (define char-lbl   2)
 (define float-lbl  3)
 (define int-lbl    4)
 (define null-lbl   5)
-(define string-lbl 6)
 
-(define typedval-lbl        7)
+(define string-lbl 9)
+
+(define typedval-lbl        10)
 (define typedval-null-idx   1)
 (define typedval-int-idx    2)
 (define typedval-float-idx  3)
 (define typedval-string-idx 4)
 (define typedval-bool-idx   5)
 (define typedval-cons-idx   6)
+(define typedval-func-idx   7)
 
-(define conscell-lbl (+ typedval-lbl 7))
+(define conscell-lbl (+ typedval-lbl 8))
 (define conscell-car-idx 1)
 (define conscell-cdr-idx 2)
 
-(define single-typedval-tuple-lbl (+ conscell-lbl 2))
-(define single-bool-tuple-lbl (+ single-typedval-tuple-lbl 1))
-(define double-typedval-tuple-lbl (+ single-bool-tuple-lbl 1))
+(define closure-lbl  (+ conscell-lbl 3))
+(define closure-func-idx      1)
+(define closure-args-idx      2)
+(define closure-framesize-idx 3)
+(define closure-env-idx       4)
 
-(define type-check-fun-lbl (+ double-typedval-tuple-lbl 1))
-(define binary-typedval-fun-lbl (+ type-check-fun-lbl 1))
-(define unary-typedval-fun-lbl (+ binary-typedval-fun-lbl 1))
+(define typedval-array-lbl (+ closure-lbl 5))
 
-(define main-fun-lbl (+ unary-typedval-fun-lbl 1))
+(define frame-lbl (+ typedval-array-lbl 1))
+(define frame-prev-idx 1)
+(define frame-bind-idx 2)
+
+(define back-lbl (+ frame-lbl 3))
+(define back-null-idx  1)
+(define back-frame-idx 2)
+
+(define single-frame-tuple-lbl    (+ back-lbl 3))
+(define single-typedval-tuple-lbl (+ back-lbl 4))
+(define function-lbl              (+ back-lbl 5))
+
+(define integer-frame-tuple-lbl   (+ back-lbl 6))
+(define call-function-lbl         (+ back-lbl 7))
+
+(define main-fun-lbl              (+ back-lbl 8))
 
 (define (make-basic-type-definition label basic-type)
   (format "T ~s 1 ~s\n" label basic-type))
@@ -92,7 +93,7 @@
 (define (make-function-definition label in-lbl out-lbl)
   (format "T ~s 3 ~s ~s\n" label in-lbl out-lbl))
 
-(define (generate-type-definitions-code); type-table)
+(define (generate-type-definitions-code)
   (string-append
     (make-basic-type-definition bool-lbl  0)
     (make-basic-type-definition char-lbl  1)
@@ -105,24 +106,18 @@
     (make-union-definition typedval-lbl
 			   null-lbl int-lbl
 			   float-lbl string-lbl
-			   bool-lbl conscell-lbl)
+			   bool-lbl conscell-lbl
+			   closure-lbl)
 
     (make-record-definition conscell-lbl typedval-lbl typedval-lbl)
 
+    (make-record-definition closure-lbl int-lbl int-lbl int-lbl frame-lbl)
+    (make-array-definition typedval-array-lbl typedval-lbl)
+    (make-record-definition frame-lbl back-lbl typedval-array-lbl)
+    (make-union-definition back-lbl null-lbl frame-lbl)
+    (make-tuple-definition single-frame-tuple-lbl frame-lbl)
     (make-tuple-definition single-typedval-tuple-lbl typedval-lbl)
-    (make-tuple-definition single-bool-tuple-lbl bool-lbl)
-
-    (extend-tuple-definition double-typedval-tuple-lbl single-typedval-tuple-lbl typedval-lbl)
-
-    (make-function-definition type-check-fun-lbl
-			      single-typedval-tuple-lbl
-			      single-bool-tuple-lbl)
-    (make-function-definition binary-typedval-fun-lbl
-			      double-typedval-tuple-lbl
-			      single-typedval-tuple-lbl)
-    (make-function-definition unary-typedval-fun-lbl
-			      single-typedval-tuple-lbl
-			      single-typedval-tuple-lbl)
-    (make-function-definition main-fun-lbl
-			      0
-			      single-typedval-tuple-lbl)))
+    (extend-tuple-definition integer-frame-tuple-lbl single-frame-tuple-lbl int-lbl)
+    (make-function-definition function-lbl single-frame-tuple-lbl single-typedval-tuple-lbl)
+    (make-function-definition call-function-lbl integer-frame-tuple-lbl single-typedval-tuple-lbl)
+    (make-function-definition main-fun-lbl 0 single-typedval-tuple-lbl)))
