@@ -5,7 +5,8 @@
 	 let? let-definitions let-body
 	 lambda? lambda-args lambda-body
 	 if? if-condition if-consequent if-alternative
-	 or? and?)
+	 or? and?
+	 lexical-address? frame offset)
 
 (define (self-evaluating? exp)
   (or (integer? exp)
@@ -68,3 +69,13 @@
 (define (and? exp)
   (and (list? exp)
        (eq? (car exp) 'and)))
+
+;;;; Lexical addressing
+(define (lexical-address? exp)
+  (vector? exp))
+
+(define (frame exp)
+  (vector-ref exp 0))
+
+(define (offset exp)
+  (vector-ref exp 1))
