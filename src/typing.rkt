@@ -1,6 +1,7 @@
 #lang racket
 
-(provide function-lbl
+(provide typedval-lbl
+	 function-lbl
 	 call-function-lbl
 	 main-fun-lbl
 	 generate-type-definitions-code)
