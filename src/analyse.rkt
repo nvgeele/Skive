@@ -25,7 +25,7 @@
 	     ,@(map (lambda (arg)
 		      (analyse arg env))
 		    (appl-args exp))))
-	  (else (display "wut\n")))))
+	  (else (error "Incorrect expression -- analyse")))))
 
 (define (list-index el lst)
   (if (null? lst)
