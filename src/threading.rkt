@@ -2,6 +2,8 @@
 
 ;; Code from the Rackjure project
 
+(provide ~>)
+
 (require (for-syntax racket/base syntax/parse))
 
 (define-syntax (~> stx)
