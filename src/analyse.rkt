@@ -37,7 +37,6 @@
 	    (else (loop (cdr list) (+ idx 1)))))))
 
 (define (lookup-var exp env)
-  (display env)(newline)
   (let loop ((env env)
 	     (frame 0))
     (let ((idx (list-index exp (cdr env))))
