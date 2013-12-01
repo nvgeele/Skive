@@ -9,6 +9,8 @@
 	 typedval-func-idx
 	 frame-lbl frame-prev-idx frame-bind-idx
 	 back-lbl back-null-idx back-frame-idx
+	 closure-lbl
+	 closure-func-idx closure-args-idx closure-framesize-idx closure-env-idx
 	 function-lbl
 	 call-function-lbl
 	 main-fun-lbl
