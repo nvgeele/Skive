@@ -1,6 +1,7 @@
 #!racket
 
-(require "syntax.rkt"
+(require "threading.rkt"
+	 "syntax.rkt"
 	 "node.rkt"
 	 "edge.rkt"
 	 "graph-boundary.rkt"
@@ -11,21 +12,55 @@
 (provide generate)
 
 (define (generate exp)
-  (generate* exp
-	     (make-graph-boundary "entry")
-	     '()))
+  (let ((program (make-program))
+	(boundary (make-graph-boundary "entry")))
+    (generate* exp boundary program)))
 
-(define (generate* exp graph-boundary boundaries)
+(define (generate-sequence seq)
+  '())
+
+(define (generate-sequence* seq graph-boundary program)
+  (let loop ((cur (car seq))
+	     (rem (cdr seq))
+	     (gb graph-boundary)
+	     (program program))
+    (let-values ([(program gb res)
+		  (generate* cur gb program)])
+      (if (null? rem)
+	(values program gb res)
+	(loop (car rem) (cdr rem) gb program)))))
+
+;; Always returns the following multiple values:
+;; - program
+;; - graph boundary
+;; - result node
+(define (generate* exp graph-boundary program)
   (cond ((lexical-address? exp)
 	 (let-values ([(gb res) (generate-lookup graph-boundary
 						 (vector-ref exp 0)
 						 (vector-ref exp 1))])
-	   (values (cons gb boundaries)
-		   res)))
+	   (values program gb res)))
 	((self-evaluating? exp)
-	 (generate-self-evaluating graph-boundary exp))
+	 (let-values ([(gb  res) (generate-self-evaluating graph-boundary exp)])
+	   (values program gb res)))
 	((lambda? exp)
-	 exp)
+	 (let*-values ([(label) (next-label program)]
+		       [(boundary) (make-graph-boundary label)]
+		       [(program gb res) (generate-sequence* (lambda-body exp) boundary program)]
+		       [(gb) (add-edge gb res 1 0 1 typedval-lbl)]
+		       [(program) (add-boundary program gb)]
+		       [(gb lit1) (add-node graph-boundary (make-literal-node label))]
+		       [(gb lit2) (add-node gb (make-literal-node (length (lambda-args exp))))]
+		       [(gb bld1) (add-node gb (make-simple-node 143))]
+		       [(gb bld2) (add-node gb (make-simple-node 143))])
+	   (values program
+		   (~> gb
+		       (add-edge lit1 1 bld1 closure-func-idx function-lbl)
+		       (add-edge lit2 1 bld1 closure-args-idx int-lbl)
+		       (add-edge lit2 1 bld1 closure-framesize-idx int-lbl)
+		       (add-edge 0    1 bld1 closure-env-idx frame-lbl)
+		       (add-edge bld1 1 bld2 typedval-func-idx closure-lbl))
+		   bld2)))
 	((application? exp)
 	 exp)
 	(else (error "Incorrect expression -- generate"))))
@@ -37,7 +72,6 @@
     (if (= frame 0)
       (let*-values ([(gb res1) (add-node gb (make-simple-node 144))]  ;; RElements
 		    [(gb res2) (add-node gb (make-simple-node 105))]) ;; AElement
-	(display (~a "Z: " gb "\n" res " - " res1 " - " res2 "\n\n"))
 	(values (add-edge (add-edge gb res 1 ;; Assuming frame-idx is always 1!
 				    res1 1 frame-lbl)
 			  res1 frame-bind-idx
@@ -45,7 +79,6 @@
 		res2))
       (let*-values ([(gb res1) (add-node gb (make-simple-node 144))]  ;; RElements
 		    [(gb res2) (add-node gb (make-simple-node 144))]) ;; RElements
-	(display (~a "NZ: " gb "\n" res " - " res1 " - " res2 "\n\n"))
 	(loop (- frame 1)
 	      (add-edge (add-edge gb res 1 ;; Assuming frame-idx is always 1!
 				  res1 1 frame-lbl)
