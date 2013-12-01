@@ -1,7 +1,10 @@
 #lang racket
 
-(provide typedval-lbl
-	 typedval-array-lbl
+(provide typedval-lbl typedval-array-lbl
+	 typedval-null-idx typedval-int-idx
+	 typedval-float-idx typedval-string-idx
+	 typedval-bool-idx typedval-cons-idx
+	 typedval-func-idx
 	 frame-lbl frame-prev-idx frame-bind-idx
 	 back-lbl back-null-idx back-frame-idx
 	 function-lbl
