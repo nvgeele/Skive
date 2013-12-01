@@ -44,23 +44,7 @@
 	 (let-values ([(gb  res) (generate-self-evaluating graph-boundary exp)])
 	   (values program gb res)))
 	((lambda? exp)
-	 (let*-values ([(label) (next-label program)]
-		       [(boundary) (make-graph-boundary label)]
-		       [(program gb res) (generate-sequence* (lambda-body exp) boundary program)]
-		       [(gb) (add-edge gb res 1 0 1 typedval-lbl)]
-		       [(program) (add-boundary program gb)]
-		       [(gb lit1) (add-node graph-boundary (make-literal-node label))]
-		       [(gb lit2) (add-node gb (make-literal-node (length (lambda-args exp))))]
-		       [(gb bld1) (add-node gb (make-simple-node 143))]
-		       [(gb bld2) (add-node gb (make-simple-node 143))])
-	   (values program
-		   (~> gb
-		       (add-edge lit1 1 bld1 closure-func-idx function-lbl)
-		       (add-edge lit2 1 bld1 closure-args-idx int-lbl)
-		       (add-edge lit2 1 bld1 closure-framesize-idx int-lbl)
-		       (add-edge 0    1 bld1 closure-env-idx frame-lbl)
-		       (add-edge bld1 1 bld2 typedval-func-idx closure-lbl))
-		   bld2)))
+	 (generate-lambda exp graph-boundary program))
 	((application? exp)
 	 exp)
 	(else (error "Incorrect expression -- generate"))))
@@ -98,3 +82,22 @@
 		[(gb llbl) (add-node gb lit-node)]
 		[(gb) (add-edge gb llbl 1 blbl type-idx type-lbl)])
     (values gb blbl)))
+
+(define (generate-lambda exp graph-boundary program)
+  (let*-values ([(label) (next-label program)]
+		[(boundary) (make-graph-boundary label)]
+		[(program gb res) (generate-sequence* (lambda-body exp) boundary program)]
+		[(gb) (add-edge gb res 1 0 1 typedval-lbl)]
+		[(program) (add-boundary program gb)]
+		[(gb lit1) (add-node graph-boundary (make-literal-node label))]
+		[(gb lit2) (add-node gb (make-literal-node (length (lambda-args exp))))]
+		[(gb bld1) (add-node gb (make-simple-node 143))]
+		[(gb bld2) (add-node gb (make-simple-node 143))])
+    (values program
+	    (~> gb
+		(add-edge lit1 1 bld1 closure-func-idx function-lbl)
+		(add-edge lit2 1 bld1 closure-args-idx int-lbl)
+		(add-edge lit2 1 bld1 closure-framesize-idx int-lbl)
+		(add-edge 0    1 bld1 closure-env-idx frame-lbl)
+		(add-edge bld1 1 bld2 typedval-func-idx closure-lbl))
+	    bld2)))
