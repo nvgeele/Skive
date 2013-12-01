@@ -43,14 +43,16 @@
 				  (= port (edge-out-port edge))))
 	      (edges gb))))
 
-(define (add-edge gb in-id in-port out-id out-port [type-lbl #f])
+(define (add-edge gb in-id in-port out-id out-port type-lbl)
   (let ((nodes (nodes gb))
 	(edges (edges gb)))
-    (cond ((or (null? (hash-ref nodes in-id null))
-	       (null? (hash-ref nodes out-id null)))
-	   (error "One or more of the node id's are invalid!"))
+    (cond ((or (and (null? (hash-ref nodes in-id null))
+		    (not (= in-id 0)))
+	       (and (null? (hash-ref nodes out-id null))
+		    (not (= out-id 0))))
+	   (error "One or more of the node id's are invalid -- add-edge"))
 	  ((not (port-free? gb out-id out-port))
-	   (error "One of the ports is already connected!"))
+	   (error "One of the ports is already connected -- add-edge"))
 	  (else
 	    (struct-copy graph-boundary gb
 			 [edges (cons (if type-lbl
