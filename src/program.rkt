@@ -13,6 +13,6 @@
 (define (next-label program)
   (~a "proc" (program-count program)))
 
-(define (add-boundary program boundary)
-  (program (+ (program-count program) 1)
-	   (cons boundary (program-boundaries program))))
+(define (add-boundary prog boundary)
+  (program (+ (program-count prog) 1)
+	   (cons boundary (program-boundaries prog))))
