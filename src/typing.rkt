@@ -1,6 +1,8 @@
 #lang racket
 
-(provide typedval-lbl typedval-array-lbl
+(provide bool-lbl string-lbl float-lbl
+	 int-lbl null-lbl
+	 typedval-lbl typedval-array-lbl
 	 typedval-null-idx typedval-int-idx
 	 typedval-float-idx typedval-string-idx
 	 typedval-bool-idx typedval-cons-idx
