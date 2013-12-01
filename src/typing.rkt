@@ -1,6 +1,9 @@
 #lang racket
 
 (provide typedval-lbl
+	 typedval-array-lbl
+	 frame-lbl frame-prev-idx frame-bind-idx
+	 back-lbl back-null-idx back-frame-idx
 	 function-lbl
 	 call-function-lbl
 	 main-fun-lbl
@@ -40,8 +43,8 @@
 (define frame-bind-idx 2)
 
 (define back-lbl (+ frame-lbl 3))
-(define back-null-idx  1)
-(define back-frame-idx 2)
+(define back-null-idx  2)
+(define back-frame-idx 1)
 
 (define single-frame-tuple-lbl    (+ back-lbl 3))
 (define single-typedval-tuple-lbl (+ back-lbl 4))
@@ -115,7 +118,7 @@
     (make-record-definition closure-lbl int-lbl int-lbl int-lbl frame-lbl)
     (make-array-definition typedval-array-lbl typedval-lbl)
     (make-record-definition frame-lbl back-lbl typedval-array-lbl)
-    (make-union-definition back-lbl null-lbl frame-lbl)
+    (make-union-definition back-lbl frame-lbl null-lbl)
     (make-tuple-definition single-frame-tuple-lbl frame-lbl)
     (make-tuple-definition single-typedval-tuple-lbl typedval-lbl)
     (extend-tuple-definition integer-frame-tuple-lbl single-frame-tuple-lbl int-lbl)
