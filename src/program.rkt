@@ -11,7 +11,7 @@
   (program 0 '()))
 
 (define (next-label program)
-  (string->symbol (~a "proc" (program-count program))))
+  (~a "proc" (program-count program)))
 
 (define (add-boundary program boundary)
   (program (+ (program-count program) 1)
