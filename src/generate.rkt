@@ -85,7 +85,8 @@
 
 (define (generate-lambda exp graph-boundary program)
   (let*-values ([(label) (next-label program)]
-		[(boundary) (make-graph-boundary label)]
+		[(str-label) (next-label-str program)]
+		[(boundary) (make-graph-boundary str-label)]
 		[(program gb res) (generate-sequence* (lambda-body exp) boundary program)]
 		[(gb) (add-edge gb res 1 0 1 typedval-lbl)]
 		[(program) (add-boundary program gb)]
@@ -95,7 +96,7 @@
 		[(gb bld2) (add-node gb (make-simple-node 143))])
     (values program
 	    (~> gb
-		(add-edge lit1 1 bld1 closure-func-idx function-lbl)
+		(add-edge lit1 1 bld1 closure-func-idx int-lbl)
 		(add-edge lit2 1 bld1 closure-args-idx int-lbl)
 		(add-edge lit2 1 bld1 closure-framesize-idx int-lbl)
 		(add-edge 0    1 bld1 closure-env-idx frame-lbl)

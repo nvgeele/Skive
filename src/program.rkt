@@ -1,5 +1,7 @@
 #!racket
 
+(require "natives.rkt")
+
 (provide make-program
 	 add-boundary
 	 next-label)
@@ -8,10 +10,13 @@
 	#:transparent)
 
 (define (make-program)
-  (program 0 '()))
+  (program (hash-count natives) '()))
+
+(define (next-label-str program)
+  (~a "proc" (program-count program)))
 
 (define (next-label program)
-  (~a "proc" (program-count program)))
+  (program-count program))
 
 (define (add-boundary prog boundary)
   (program (+ (program-count prog) 1)
