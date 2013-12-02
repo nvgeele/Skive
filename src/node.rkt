@@ -13,10 +13,12 @@
   (node 'literal value))
 
 (define (literal-node? node)
-  (eq? (node-type node) 'literal))
+  (and (node? node)
+       (eq? (node-type node) 'literal)))
 
 (define (simple-node? node)
-  (eq? (node-type node) 'simple))
+  (and (node? node)
+       (eq? (node-type node) 'simple)))
 
 (define opcode node-value)
 (define value node-value)
