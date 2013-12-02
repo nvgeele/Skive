@@ -34,19 +34,19 @@
     (~a "G " function-lbl "\t\"" (graph-boundary-name boundary) "\"\n"
 	(foldl (lambda (lbl str)
 		 (~a str
-		   (let ((node (graph-node boundary lbl)))
-		     (cond ((literal-node? node)
-			    "")
-			   ((simple-node? node)
-			    (translate-simple-node boundary node lbl))
-			   (else
-			     (translate-compound-node boundary node lbl))))))
+		     (let ((node (graph-node boundary lbl)))
+		       (cond ((literal-node? node)
+			      "")
+			     ((simple-node? node)
+			      (translate-simple-node boundary node lbl))
+			     (else
+			       (translate-compound-node boundary node lbl))))))
 	       ""
 	       sorted)
 	(foldl-edges-to boundary 0
 			"" (lambda (edge res)
 			     (~a res
-			         "E\t" (edge-in-node edge) " " (edge-in-port edge)
+				 "E\t" (edge-in-node edge) " " (edge-in-port edge)
 				 "\t" (edge-out-node edge) " " (edge-out-port edge)
 				 "\t" (edge-type-lbl edge) "\n"))))))
 
@@ -108,6 +108,41 @@
   "")
 
 (define (make-call-function program)
+  (let ((funcs (append (map (lambda (n)
+			      (native-name (cdr n)))
+			    natives-list)
+		       (build-list (- (program-count program)
+				      (length natives-list))
+				   (lambda (i)
+				     (~a "proc" (+ i (length natives-list) -1)))))))
+    (~a "G " call-function-lbl "\t\"call\"\n"
+	(let loop ((cur (car funcs))
+		   (rem (cdr funcs)))
+	  (~a "{\n"
+	      "G 0\n"
+	      "E\t0 1\t0 1\t" int-lbl "\n"
+	      "G 0\n"
+	      "N 1\t120\n"
+	      "L\t\t1 1\t" function-lbl " \"" cur "\"\n"
+	      "E\t0 2\t1 2\t" frame-lbl "\n"
+	      "E\t1 1\t0 1\t" typedval-lbl "\n"
+	      "G 0\n"
+	      (if (null? rem)
+		(~a "L\t\t0 1\t" typedval-lbl " \"error\"\n")
+		(~a "N 1\t135\n"
+		    "E\t0 1\t1 1\t" int-lbl "\n"
+		    "L\t\t1 2\t" int-lbl " \"1\"\n"
+		    (loop (car rem) (cdr rem))
+		    #|"E\t1 1\t2 1\t" int-lbl "\n"
+		    "E\t0 2\t2 2\t" frame-lbl "\n"
+		    "E\t2 1\t0 1\t" typedval-lbl "\n"|#
+		    ))
+	      "} 2 1 3 0 1 2\n"
+	      "E\t0 1\t2 1\t" int-lbl "\n"
+	      "E\t0 2\t2 2\t" frame-lbl "\n"
+	      "E\t2 1\t0 1\t" typedval-lbl "\n")))))
+
+(define (make-call-function* program)
   (~a "G " call-function-lbl "\t\"call\"\n"
       "{ Compound 1 1\n"
       "G 0\n"
@@ -182,13 +217,13 @@
     (if (null? rem)
       (values
 	(~a str
-		"N " cnt "\t143\n"
-		"E\t3 1\t" cnt " " closure-env-idx "\t" frame-lbl "\n"
-		"L\t\t" cnt " " closure-func-idx "\t" int-lbl " \"" id "\"\n"
-		"L\t\t" cnt " " closure-args-idx "\t" int-lbl " \"" (native-inputs (cdr cur)) "\"\n"
-		"L\t\t" cnt " " closure-framesize-idx "\t" int-lbl " \"" (native-inputs (cdr cur)) "\"\n"
-		"N " (+ cnt 1) "\t143\n"
-		"E\t" cnt " 1\t" (+ cnt 1) " " typedval-func-idx "\t" closure-lbl "\n")
+	    "N " cnt "\t143\n"
+	    "E\t3 1\t" cnt " " closure-env-idx "\t" frame-lbl "\n"
+	    "L\t\t" cnt " " closure-func-idx "\t" int-lbl " \"" id "\"\n"
+	    "L\t\t" cnt " " closure-args-idx "\t" int-lbl " \"" (native-inputs (cdr cur)) "\"\n"
+	    "L\t\t" cnt " " closure-framesize-idx "\t" int-lbl " \"" (native-inputs (cdr cur)) "\"\n"
+	    "N " (+ cnt 1) "\t143\n"
+	    "E\t" cnt " 1\t" (+ cnt 1) " " typedval-func-idx "\t" closure-lbl "\n")
 	(+ cnt 2)
 	(cons (+ cnt 1) ids))
       (loop (car rem) (cdr rem)
