@@ -10,7 +10,9 @@
 	 for-each-edge
 	 foldl-nodes
 	 foldl-edges
-	 graph-boundary->dot-file)
+	 graph-boundary->dot-file
+	 label-counter
+	 graph-boundary-name)
 
 (struct graph-boundary (;type
 			name
@@ -88,7 +90,7 @@
 		 (edges gb))))
 
 (define (graph-boundary->dot-file gb)
-  (~a (foldl-nodes gb "digraph G { "
+  (~a (foldl-nodes gb (~a "digraph \"" (name gb) "\" { ")
 		   (lambda (label node res)
 		     (let ((node-label (~a "node" label))
 			   (node-text
