@@ -8,6 +8,8 @@
 (provide make-program
 	 add-boundary
 	 next-label next-label-str
+	 program-boundaries
+	 program-count
 	 program->dot-file)
 
 (struct program (count boundaries)
