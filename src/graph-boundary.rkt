@@ -10,9 +10,12 @@
 	 for-each-edge
 	 foldl-nodes
 	 foldl-edges
+	 foldl-edges-to
 	 graph-boundary->dot-file
 	 label-counter
-	 graph-boundary-name)
+	 graph-boundary-name
+	 topological-sort
+	 graph-node)
 
 (struct graph-boundary (;type
 			name
@@ -89,6 +92,13 @@
 		   (= node (edge-in-node edge)))
 		 (edges gb))))
 
+;; proc: edge any -> any
+(define (foldl-edges-to gb node init proc)
+  (foldl proc init
+	 (filter (lambda (edge)
+		   (= node (edge-out-node edge)))
+		 (edges gb))))
+
 (define (graph-boundary->dot-file gb)
   (~a (foldl-nodes gb (~a "digraph \"" (name gb) "\" { ")
 		   (lambda (label node res)
@@ -110,5 +120,32 @@
 					  (~a res
 					      node-label
 					      " -> node" (edge-out-node edge)
-					      " [label=\"" (edge-out-port edge) "\"];")))))))
+					      " [label=\""
+					      (edge-out-port edge) "\\n"
+					      (edge-type-lbl edge) "\"];")))))))
       "}"))
+
+(define (topological-sort gb)
+  (define (dft-rec from stack visited)
+    (let ((edges (map edge-out-node (filter (lambda (edge)
+					      (= from (edge-in-node edge)))
+					    (edges gb)))))
+      (let* ((cell (foldl (lambda (to c)
+			    (if (set-member? (car c) to)
+			      c
+			      (dft-rec to (cdr c) (set-add (car c) to))))
+			  (cons visited stack)
+			  edges))
+	     (stack (cdr cell))
+	     (visited (car cell)))
+	(cons visited
+	      (cons from stack)))))
+  (cdr (foldl (lambda (from cell)
+		(if (set-member? (car cell) from)
+		  cell
+		  (dft-rec from (cdr cell) (set-add (car cell) from))))
+	      (cons (set) '())
+	      (map car (hash->list (nodes gb))))))
+
+(define (graph-node boundary id)
+  (hash-ref (nodes boundary) id #f))
