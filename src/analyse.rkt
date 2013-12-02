@@ -7,7 +7,7 @@
 
 (define (analyse exp . env)
   (let ((env (if (null? env)
-	       (cons '() natives-list)
+	       (cons '() (map car natives-list))
 	       (car env))))
     (cond ((symbol? exp)
 	   (lookup-var exp env))

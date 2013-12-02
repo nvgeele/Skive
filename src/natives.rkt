@@ -26,4 +26,4 @@
 ;; same order.
 
 (define natives-list
-  (hash-map natives (lambda (k v) k)))
+  (hash->list natives))
