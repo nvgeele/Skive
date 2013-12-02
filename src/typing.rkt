@@ -13,7 +13,7 @@
 	 closure-func-idx closure-args-idx closure-framesize-idx closure-env-idx
 	 function-lbl
 	 call-function-lbl
-	 main-fun-lbl
+	 main-function-lbl
 	 generate-type-definitions-code)
 
 (define bool-lbl   1)
@@ -60,7 +60,7 @@
 (define integer-frame-tuple-lbl   (+ back-lbl 6))
 (define call-function-lbl         (+ back-lbl 7))
 
-(define main-fun-lbl              (+ back-lbl 8))
+(define main-function-lbl         (+ back-lbl 8))
 
 (define (make-basic-type-definition label basic-type)
   (format "T ~s 1 ~s\n" label basic-type))
@@ -131,4 +131,4 @@
     (extend-tuple-definition integer-frame-tuple-lbl single-frame-tuple-lbl int-lbl)
     (make-function-definition function-lbl single-frame-tuple-lbl single-typedval-tuple-lbl)
     (make-function-definition call-function-lbl integer-frame-tuple-lbl single-typedval-tuple-lbl)
-    (make-function-definition main-fun-lbl 0 single-typedval-tuple-lbl)))
+    (make-function-definition main-function-lbl 0 single-typedval-tuple-lbl)))
