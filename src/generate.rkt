@@ -57,20 +57,26 @@
 	     (res 0))
     (if (= frame 0)
       (let*-values ([(gb res1) (add-node gb (make-simple-node 144))]  ;; RElements
-		    [(gb res2) (add-node gb (make-simple-node 105))]) ;; AElement
-	(values (add-edge (add-edge gb res 1 ;; Assuming frame-idx is always 1!
-				    res1 1 frame-lbl)
-			  res1 frame-bind-idx
-			  res2 1 typedval-array-lbl)
-		res2))
-      (let*-values ([(gb res1) (add-node gb (make-simple-node 144))]  ;; RElements
-		    [(gb res2) (add-node gb (make-simple-node 144))]) ;; RElements
-	(loop (- frame 1)
-	      (add-edge (add-edge gb res 1 ;; Assuming frame-idx is always 1!
-				  res1 1 frame-lbl)
-			res1 frame-prev-idx
-			res2 1 back-lbl)
-	      res2)))))
+		    [(gb res2) (add-node gb (make-simple-node 105))]  ;; AElement
+		    [(gb lit1) (add-node gb (make-literal-node offset))])
+	#|(values (add-edge (add-edge gb res 1 ;; Assuming frame-idx is always 1!
+				      res1 1 frame-lbl)
+			    res1 frame-bind-idx
+			    res2 1 typedval-array-lbl)
+		  res2))|#
+      (values (~> gb
+		  (add-edge res 1 res1 1 frame-lbl) ;; Assuming back-frame-idx is always 1!
+		  (add-edge res1 frame-bind-idx res2 1 typedval-array-lbl)
+		  (add-edge lit1 1 res2 2 int-lbl))
+	      res2))
+    (let*-values ([(gb res1) (add-node gb (make-simple-node 144))]  ;; RElements
+		  [(gb res2) (add-node gb (make-simple-node 144))]) ;; RElements
+      (loop (- frame 1)
+	    (add-edge (add-edge gb res 1 ;; Assuming back-frame-idx is always 1!
+				res1 1 frame-lbl)
+		      res1 frame-prev-idx
+		      res2 1 back-lbl)
+	    res2)))))
 
 (define (generate-self-evaluating graph-boundary exp)
   (let*-values ([(lit-node build-node) (values (make-literal-node exp)
@@ -139,7 +145,7 @@
 			  (add-edge tvl-elm typedval-func-idx cls-elm 1 closure-lbl)
 			  (add-edge cls-elm closure-framesize-idx bnd-bld 1 int-lbl)
 			  (add-edge cls-elm closure-env-idx bck-bld back-frame-idx frame-lbl)
-			  (add-edge bck-bld 1 frm-bld frame-prev-idx frame-lbl)
+			  (add-edge bck-bld 1 frm-bld frame-prev-idx back-lbl);;fix?
 			  (add-edge bnd-bld 1 frm-bld frame-bind-idx typedval-array-lbl)
 			  (add-edge cls-elm closure-func-idx call 2 int-lbl)
 			  (add-edge frm-bld 1 call 3 frame-lbl)
