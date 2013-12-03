@@ -6,7 +6,7 @@
 	 typedval-null-idx typedval-int-idx
 	 typedval-float-idx typedval-string-idx
 	 typedval-bool-idx typedval-cons-idx
-	 typedval-func-idx
+	 typedval-func-idx typedval-type-count
 	 frame-lbl frame-prev-idx frame-bind-idx
 	 back-lbl back-null-idx back-frame-idx
 	 closure-lbl
@@ -32,6 +32,7 @@
 (define typedval-bool-idx   5)
 (define typedval-cons-idx   6)
 (define typedval-func-idx   7)
+(define typedval-type-count 7)
 
 (define conscell-lbl (+ typedval-lbl 8))
 (define conscell-car-idx 1)
