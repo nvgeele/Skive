@@ -243,7 +243,7 @@
       (let-values ([(str cnt ids) (make-env-nodes)])
 	(~a str
 	    "N " cnt "\t103\n"
-	    "L\t\t" cnt " 1\t" int-lbl " \"" (length natives-list) "\"\n"
+	    "L\t\t" cnt " 1\t" int-lbl " \"0\"\n"
 	    (car
 	      (foldl (lambda (id cell)
 		       (cons
@@ -252,7 +252,7 @@
 			   "E\t" id " 1\t" cnt " " (cdr cell) "\t" typedval-lbl "\n")
 			 (+ 1 (cdr cell))))
 		     (cons "" 2)
-		     ids))
+		     (reverse ids)))
 	    "N " (+ cnt 1) "\t143\n"
 	    "E\t1 1\t" (+ cnt 1) " " frame-prev-idx "\t" back-lbl "\n"
 	    "E\t" cnt " 1\t" (+ cnt 1) " " frame-bind-idx "\t" typedval-array-lbl "\n"
