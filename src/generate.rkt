@@ -111,7 +111,7 @@
 		(add-edge bld1 1 bld2 typedval-func-idx closure-lbl))
 	    bld2)))
 
-(define (generate-args arg-exps graph-boundary program)
+#|(define (generate-args arg-exps graph-boundary program)
   (if (null? arg-exps)
     (values program graph-boundary '())
     (let loop ((cur (car arg-exps))
@@ -150,4 +150,45 @@
 			  (add-edge cls-elm closure-func-idx call 2 int-lbl)
 			  (add-edge frm-bld 1 call 3 frame-lbl)
 			  (add-edge lit1 1 call 1 call-function-lbl))])
+    (values program gb call)))|#
+
+(define (generate-args arg-exps graph-boundary program)
+  (if (null? arg-exps)
+    (values program graph-boundary '())
+    (let loop ((cur (car arg-exps))
+	       (rem (cdr arg-exps))
+	       (lst '())
+	       (gb graph-boundary)
+	       (program program))
+      (let-values ([(program gb res) (generate* cur gb program)])
+	(if (null? rem)
+	  (values program gb (reverse (cons res lst)))
+	  (loop (car rem) (cdr rem) (cons res lst) gb program))))))
+
+(define (generate-application exp graph-boundary program)
+  (let*-values ([(program gb op-res)
+		 (generate* (appl-op exp) graph-boundary program)]
+		[(program gb args)
+		 (generate-args (appl-args exp) gb program)]
+		[(gb tvl-elm) (add-node gb (make-simple-node 144))]
+		[(gb cls-elm) (add-node gb (make-simple-node 144))]
+		[(gb bnd-bld) (add-node gb (make-simple-node 103))]
+		[(gb bck-bld) (add-node gb (make-simple-node 143))]
+		[(gb frm-bld) (add-node gb (make-simple-node 143))]
+		[(gb cll-lit) (add-node gb (make-literal-node "call"))]
+		[(gb call)    (add-node gb (make-simple-node 120))]
+		[(gb) (car (foldl (lambda (node c)
+				    (cons (add-edge (car c) node 1 bnd-bld (cdr c) typedval-lbl)
+					  (+ 1 (cdr c))))
+				  (cons gb 2) args))]
+		[(gb) (~> gb
+			  (add-edge op-res 1 tvl-elm 1 typedval-lbl)
+			  (add-edge tvl-elm typedval-func-idx cls-elm 1 closure-lbl)
+			  (add-edge cls-elm closure-framesize-idx bnd-bld 1 int-lbl)
+			  (add-edge cls-elm closure-env-idx bck-bld back-frame-idx frame-lbl)
+			  (add-edge bnd-bld 1 frm-bld frame-bind-idx typedval-array-lbl)
+			  (add-edge bck-bld 1 frm-bld frame-prev-idx back-lbl)
+			  (add-edge cls-elm closure-func-idx call 2 int-lbl)
+			  (add-edge frm-bld 1 call 3 frame-lbl)
+			  (add-edge cll-lit 1 call 1 call-function-lbl))])
     (values program gb call)))
