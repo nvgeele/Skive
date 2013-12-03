@@ -172,6 +172,7 @@
 		 (generate-args (appl-args exp) gb program)]
 		[(gb tvl-elm) (add-node gb (make-simple-node 144))]
 		[(gb cls-elm) (add-node gb (make-simple-node 144))]
+		[(gb bnd-lit) (add-node gb (make-literal-node "0"))]
 		[(gb bnd-bld) (add-node gb (make-simple-node 103))]
 		[(gb bck-bld) (add-node gb (make-simple-node 143))]
 		[(gb frm-bld) (add-node gb (make-simple-node 143))]
