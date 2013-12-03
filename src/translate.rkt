@@ -30,7 +30,8 @@
 
 (define (translate-boundary boundary)
   (let ((sorted (filter (lambda (i) (not (= i 0)))
-			(topological-sort boundary))))
+			(range 1 (label-counter boundary)))))
+			;(topological-sort boundary))))
     (~a "G " function-lbl "\t\"" (graph-boundary-name boundary) "\"\n"
 	(foldl (lambda (lbl str)
 		 (~a str
