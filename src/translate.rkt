@@ -109,6 +109,17 @@
   "")
 
 (define (make-call-function program)
+  (~a "G " call-function-lbl "\t\"call\"\n"
+      "N 1\t143\n"
+      "L\t\t1 2\t4 \"1\"\n"
+      "E\t1 1\t0 1\t" typedval-lbl "\n")
+  (~a "G " call-function-lbl "\t\"call\"\n"
+      "N 1\t120\n"
+      "E\t0 2\t1 2\t" frame-lbl "\n"
+      "L\t\t1 1\t" function-lbl " \"plus\"\n"
+      "E\t1 1\t0 1\t" typedval-lbl "\n"))
+
+#|(define (make-call-function program)
   (let ((funcs (append (map (lambda (n)
 			      (native-name (cdr n)))
 			    natives-list)
@@ -141,7 +152,7 @@
 	      "} 2 1 3 0 1 2\n"
 	      "E\t0 1\t2 1\t" int-lbl "\n"
 	      "E\t0 2\t2 2\t" frame-lbl "\n"
-	      "E\t2 1\t0 1\t" typedval-lbl "\n")))))
+	      "E\t2 1\t0 1\t" typedval-lbl "\n")))))|#
 
 (define (make-call-function* program)
   (~a "G " call-function-lbl "\t\"call\"\n"
@@ -176,7 +187,7 @@
 
 ;; The main function build ups the initial environment
 ;; and calls the main function with it.
-(define (make-main-function program)
+(define (make-main-function* program)
   (~a "X " main-function-lbl "\t\"main\"\n"
       ;; First we build an empty frame
       "N 1\t143\n"
@@ -210,32 +221,64 @@
 	    "E\t" (+ cnt 1) " 1\t" (+ cnt 2) " 2\t" typedval-array-lbl "\n"
 	    "E\t" (+ cnt 2) " 1\t0 1\t" typedval-lbl "\n"))))
 
+(define (make-main-function program)
+  (~a "X " main-function-lbl "\t\"main\"\n"
+      ;; First, we build a single frame, with no backlink
+      ;; and only a single value in the frame, null.
+      ;; This frame will be used as the bound environment
+      ;; for the closures of native functions.
+      "N 1\t143\n"
+      "L\t\t1 " back-null-idx "\t" null-lbl " \"nil\"\n"
+      "N 2\t143\n"
+      "L\t\t2 " typedval-null-idx "\t" null-lbl " \"nil\"\n"
+      "N 3\t103\n"
+      "L\t\t3 1\t" int-lbl " \"1\"\n"
+      "E\t2 1\t3 2\t" typedval-lbl "\n"
+      "N 4\t143\n"
+      "E\t1 1\t4 " frame-prev-idx "\t" back-lbl "\n"
+      "E\t3 1\t4 " frame-bind-idx "\t" typedval-array-lbl "\n"
+      ;; The single frame now resides in node 4.
+      ;; cnt := next free id
+      ;; ids := list of all typedval ids
+      (let-values ([(str cnt ids) (make-env-nodes)])
+	(~a str
+	    "N " cnt "\t103\n"
+	    "L\t\t" cnt " 1\t" int-lbl " \"" (length natives-list) "\"\n"
+	    (car
+	      (foldl (lambda (id cell)
+		       (cons
+			 (~a 
+			   (car cell)
+			   "E\t" id " 1\t" cnt " " (cdr cell) "\t" typedval-lbl "\n")
+			 (+ 1 (cdr cell))))
+		     (cons "" 2)
+		     ids))
+	    "N " (+ cnt 1) "\t143\n"
+	    "E\t1 1\t" (+ cnt 1) " " frame-prev-idx "\t" back-lbl "\n"
+	    "E\t" cnt " 1\t" (+ cnt 1) " " frame-bind-idx "\t" typedval-array-lbl "\n"
+	    "N " (+ cnt 2) "\t120\n"
+	    "L\t\t" (+ cnt 2) " 1\t" function-lbl " \"entry\"\n"
+	    "E\t" (+ cnt 1) " 1\t" (+ cnt 2) " 2\t" frame-lbl "\n"
+	    "E\t" (+ cnt 2) " 1\t0 1\t" typedval-lbl "\n"))))
+
 (define (make-env-nodes)
   (let loop ((cur (car natives-list))
 	     (rem (cdr natives-list))
-	     (str "")(cnt 4)(ids '())
+	     (str "")(cnt 5)(ids '()) ;; CHANGE BACK TO 4 pls thx bai
 	     (id 0))
-    (if (null? rem)
-      (values
-	(~a str
-	    "N " cnt "\t143\n"
-	    "E\t3 1\t" cnt " " closure-env-idx "\t" frame-lbl "\n"
-	    "L\t\t" cnt " " closure-func-idx "\t" int-lbl " \"" id "\"\n"
-	    "L\t\t" cnt " " closure-args-idx "\t" int-lbl " \"" (native-inputs (cdr cur)) "\"\n"
-	    "L\t\t" cnt " " closure-framesize-idx "\t" int-lbl " \"" (native-inputs (cdr cur)) "\"\n"
-	    "N " (+ cnt 1) "\t143\n"
-	    "E\t" cnt " 1\t" (+ cnt 1) " " typedval-func-idx "\t" closure-lbl "\n")
-	(+ cnt 2)
-	(cons (+ cnt 1) ids))
-      (loop (car rem) (cdr rem)
+    (let ((str
 	    (~a str
 		"N " cnt "\t143\n"
-		"E\t3 1\t" cnt " " closure-env-idx "\t" frame-lbl "\n"
+		"E\t4 1\t" cnt " " closure-env-idx "\t" frame-lbl "\n" ;; CHANGE BACK TO 3 pls thx bai
 		"L\t\t" cnt " " closure-func-idx "\t" int-lbl " \"" id "\"\n"
 		"L\t\t" cnt " " closure-args-idx "\t" int-lbl " \"" (native-inputs (cdr cur)) "\"\n"
 		"L\t\t" cnt " " closure-framesize-idx "\t" int-lbl " \"" (native-inputs (cdr cur)) "\"\n"
 		"N " (+ cnt 1) "\t143\n"
-		"E\t" cnt " 1\t" (+ cnt 1) " " typedval-func-idx "\t" closure-lbl "\n")
+		"E\t" cnt " 1\t" (+ cnt 1) " " typedval-func-idx "\t" closure-lbl "\n")))
+    (if (null? rem)
+      (values str (+ cnt 2) (cons (+ cnt 1) ids))
+      (loop (car rem) (cdr rem)
+	    str
 	    (+ cnt 2)
 	    (cons (+ cnt 1) ids)
-	    (+ id 1)))))
+	    (+ id 1))))))
