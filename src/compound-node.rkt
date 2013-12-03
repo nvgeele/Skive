@@ -3,9 +3,10 @@
 (require "graph-boundary.rkt")
 
 (provide compound-node?
-	 make-compound-node
+	 make-tagcase)
+	 #|make-compound-node
 	 add-graph
-	 subgraph-count)
+	 subgraph-count|#
 
 (struct compound-node (operation
 		       subgraphs order)
@@ -36,3 +37,10 @@
   (length (subgraphs cn)))
 
 ;; TODO: set-order
+
+;; Count is the amount of cases there are.
+;; Boundaries is an *ordered* list of all the boundaries.
+;; Order decides which graphs from ordered get executed
+;; for which case or cases.
+(define (make-tagcase count boundaries order)
+  (compound-node 2 boundaries order))
