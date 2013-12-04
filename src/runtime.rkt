@@ -10,7 +10,7 @@ N 1	144
 E	0 1	1 1	27	 
 N 2	105	
 E	1 2	2 1	26	 
-L		2 2	4 \"1\"	
+L		2 2	4 \"0\"	
 { Compound   3   2
 G	0	
 L		0 1	1 \"false\"	
@@ -42,7 +42,7 @@ N 1	144
 E	0 1	1 1	27	 
 N 2	105	
 E	1 2	2 1	26	 
-L		2 2	4 \"1\"	
+L		2 2	4 \"0\"	
 { Compound   3   2
 G	0	
 L		0 1	1 \"false\"	
@@ -62,7 +62,7 @@ N 1	144
 E	0 1	1 1	27	 
 N 2	105	
 E	1 2	2 1	26	 
-L		2 2	4 \"1\"	
+L		2 2	4 \"0\"	
 { Compound   3   2
 G	0	
 L		0 1	1 \"false\"	
@@ -82,7 +82,7 @@ N 1	144
 E	0 1	1 1	27	 
 N 2	105	
 E	1 2	2 1	26	 
-L		2 2	4 \"1\"	
+L		2 2	4 \"0\"	
 { Compound   3   2
 G	0	
 L		0 1	1 \"false\"	
@@ -102,7 +102,7 @@ N 1	144
 E	0 1	1 1	27	 
 N 2	105	
 E	1 2	2 1	26	 
-L		2 2	4 \"1\"	
+L		2 2	4 \"0\"	
 { Compound   3   2
 G	0	
 L		0 1	1 \"false\"	
@@ -122,7 +122,7 @@ N 1	144
 E	0 1	1 1	27	 
 N 2	105	
 E	1 2	2 1	26	 
-L		2 2	4 \"1\"	
+L		2 2	4 \"0\"	
 { Compound   3   2
 G	0	
 L		0 1	1 \"false\"	
@@ -142,7 +142,7 @@ N 1	144
 E	0 1	1 1	27	 
 N 2	105	
 E	1 2	2 1	26	 
-L		2 2	4 \"1\"	
+L		2 2	4 \"0\"	
 { Compound   3   2
 G	0	
 L		0 1	1 \"false\"	
@@ -162,7 +162,7 @@ N 1	144
 E	0 1	1 1	27	 
 N 2	105	
 E	1 2	2 1	26	 
-L		2 2	4 \"1\"	
+L		2 2	4 \"0\"	
 { Compound   3   2
 G	0	
 N 1	139	
@@ -219,7 +219,7 @@ N 1	144
 E	0 1	1 1	27	 
 N 2	105	
 E	1 2	2 1	26	 
-L		2 2	4 \"1\"	
+L		2 2	4 \"0\"	
 { Compound   3   2
 G	0	
 N 1	144	
@@ -496,8 +496,19 @@ E	2 1	4 2	10
 E	4 1	0 1	10\n")
 
 (define (generate-runtime-code)
-  (string-append is_num is_int is_float
-		 is_null is_string is_bool 
-		 is_cons is_false get_car
-		 get_cdr rt-cons plus
-		 minus multiply divide))
+  (string-append ;is_num
+		 ;is_int
+		 ;is_float
+		 ;is_null
+		 ;is_string
+		 ;is_bool 
+		 ;is_cons
+		 ;is_false
+		 get_car
+		 get_cdr
+		 rt-cons
+		 plus
+		 ;minus
+		 ;multiply
+		 ;divide
+		 ))
