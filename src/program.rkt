@@ -19,7 +19,7 @@
   (program (hash-count natives) '()))
 
 (define (next-label-str program)
-  (~a "proc" (program-count program)))
+  (~a "proc_" (program-count program)))
 
 (define (next-label program)
   (program-count program))

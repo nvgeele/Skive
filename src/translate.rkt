@@ -151,11 +151,9 @@
 (define (make-call-function program)
   (let ((function-labels
 	  (append (map (lambda (n) (native-name (cdr n))) natives-list)
-		  (filter (lambda (name) (not (string=? name "entry")))
-			  (reverse
-			  (map graph-boundary-name (program-boundaries program))
-			  )
-			  ))))
+		  (map (lambda (i) (~a "proc_" i))
+			      (let ((len (length natives-list)))
+				(range len (+ len (length (program-boundaries program)) -1)))))))
     ;; We assume that there are at least 2 native functions...
     (~a "G " call-function-lbl "\t\"call\"\n"
 	"N 1\t124\n"
