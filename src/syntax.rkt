@@ -3,12 +3,15 @@
 (provide self-evaluating?
 	 application? appl-op appl-args
 	 let? let-definitions let-body
-	 or? and?)
+	 lambda? lambda-args lambda-body
+	 if? if-condition if-consequent if-alternative
+	 or? and?
+	 lexical-address? frame offset)
 
 (define (self-evaluating? exp)
   (or (integer? exp)
       (string? exp)
-      (symbol? exp)
+      ;(symbol? exp)
       (boolean? exp)
       (null? exp)))
 
@@ -45,6 +48,18 @@
   (cddr exp))
 
 ;;;; If expressions
+(define (if? exp)
+  (and (list? exp)
+       (eq? (car exp) 'if)))
+
+(define (if-condition exp)
+  (cadr exp))
+
+(define (if-consequent exp)
+  (caddr exp))
+
+(define (if-alternative exp)
+  (cadddr exp))
 
 ;;;; and/or
 (define (or? exp)
@@ -54,3 +69,13 @@
 (define (and? exp)
   (and (list? exp)
        (eq? (car exp) 'and)))
+
+;;;; Lexical addressing
+(define (lexical-address? exp)
+  (vector? exp))
+
+(define (frame exp)
+  (vector-ref exp 0))
+
+(define (offset exp)
+  (vector-ref exp 1))

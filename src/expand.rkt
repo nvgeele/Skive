@@ -16,7 +16,8 @@
 	 (hash->list natives)))
 
 (define (expand exp)
-  (cond ((self-evaluating? exp)
+  (cond ((or (self-evaluating? exp)
+	     (symbol? exp))
 	 exp)
 	((let? exp)
 	 (let* ((defs (let-definitions exp))
