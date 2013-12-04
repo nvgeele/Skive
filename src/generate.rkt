@@ -57,6 +57,38 @@
 	     (gb graph-boundary)
 	     (res 0))
     (if (= frame 0)
+      (let*-values ([(gb frm-elm) (add-node gb (make-simple-node 144))]
+		    [(gb bnd-lit) (add-node gb (make-literal-node offset))]
+		    [(gb bnd-elm) (add-node gb (make-simple-node 105))])
+	(values (~> gb
+		    (add-edge res 1 frm-elm 1 frame-lbl)
+		    (add-edge bnd-lit 1 bnd-elm 2 int-lbl)
+		    (add-edge frm-elm frame-bind-idx bnd-elm 1 typedval-array-lbl))
+		bnd-elm))
+      (let*-values ([(gb-fail) (make-graph-boundary "")]
+		    [(gb-fail lit-err) (add-node gb-fail (make-literal-node "error"))]
+		    [(gb-fail) (add-edge gb-fail lit-err 1 0 1 frame-lbl)]
+		    
+		    [(gb-succ) (~> (make-graph-boundary "")
+				   (add-edge 0 1 0 1 frame-lbl))]
+
+		    [(gb frm-elm) (add-node gb (make-simple-node 144))]
+		    [(gb tagcase) (add-node gb (make-tagcase ;typedval-type-count
+						 `(,gb-fail ,gb-succ ,gb-fail)
+						 #(1 0)))]) ;; Assuming back-frame-idx is 1
+	(loop (- frame 1)
+	      (~> gb
+		  (add-edge res 1 frm-elm 1 frame-lbl)
+		  (add-edge frm-elm frame-prev-idx tagcase 1 back-lbl))
+	      tagcase)))))
+
+
+      
+(define (generate-lookup* graph-boundary frame offset)
+  (let loop ((frame frame)
+	     (gb graph-boundary)
+	     (res 0))
+    (if (= frame 0)
       (let*-values ([(gb res1) (add-node gb (make-simple-node 144))]  ;; RElements
 		    [(gb res2) (add-node gb (make-simple-node 105))]  ;; AElement
 		    [(gb lit1) (add-node gb (make-literal-node offset))])
