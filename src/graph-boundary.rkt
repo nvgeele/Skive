@@ -15,7 +15,8 @@
 	 label-counter
 	 graph-boundary-name
 	 topological-sort
-	 graph-node)
+	 graph-node
+	 set-boundary-name)
 
 (struct graph-boundary (;type
 			name
@@ -67,6 +68,11 @@
 					(make-edge in-id in-port
 						   out-id out-port))
 				      edges)])))))
+
+(define (set-boundary-name boundary new-name)
+  (struct-copy graph-boundary boundary
+	       [name new-name]))
+
 ;; proc: label node -> any
 (define (for-each-node gb proc)
   (for ([(label node) (nodes gb)])

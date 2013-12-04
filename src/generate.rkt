@@ -125,12 +125,12 @@
     (values gb blbl)))
 
 (define (generate-lambda exp graph-boundary program)
-  (let*-values ([(label) (next-label program)]
-		[(str-label) (next-label-str program)]
-		[(boundary) (make-graph-boundary str-label)]
+  (let*-values ([(boundary) (make-graph-boundary "temp")]
 		[(program gb res) (generate-sequence* (lambda-body exp) boundary program)]
 		[(gb) (add-edge gb res 1 0 1 typedval-lbl)]
-		[(program) (add-boundary program gb)]
+		[(label) (next-label program)]
+		[(str-label) (next-label-str program)]
+		[(program) (add-boundary program (set-boundary-name gb str-label))]
 		[(gb lit1) (add-node graph-boundary (make-literal-node label))]
 		[(gb lit2) (add-node gb (make-literal-node (length (lambda-args exp))))]
 		[(gb bld1) (add-node gb (make-simple-node 143))]
