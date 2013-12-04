@@ -31,8 +31,8 @@
 
 (define (translate-boundary boundary [function-lbl function-lbl] [name #t])
   (let ((sorted (filter (lambda (i) (not (= i 0)))
-			(range 1 (label-counter boundary)))))
-    ;(topological-sort boundary))))
+			(topological-sort boundary))))
+			;(range 1 (label-counter boundary)))))
     (~a "G " function-lbl
 	(if name
 	  (~a "\t\"" (graph-boundary-name boundary) "\"\n")
@@ -137,7 +137,7 @@
 				    "\t" (edge-type-lbl edge) "\n"))))))))
 
 
-(define (make-call-function program)
+(define (make-call-function** program)
   (~a "G " call-function-lbl "\t\"call\"\n"
       "N 1\t143\n"
       "L\t\t1 2\t4 \"1\"\n"
@@ -147,6 +147,113 @@
       "E\t0 2\t1 2\t" frame-lbl "\n"
       "L\t\t1 1\t" function-lbl " \"cons\"\n"
       "E\t1 1\t0 1\t" typedval-lbl "\n"))
+
+(define (make-call-function program)
+  (let ((function-labels
+	  (append (map (lambda (n) (native-name (cdr n))) natives-list)
+		  (map (lambda (n) (~a "proc" n)) (range 1 (- (program-count program) 2))))))
+		  #|(build-list (- (program-count program) (length natives-list))
+			      (lambda (i) (~a "proc" (+ i (length natives-list) -1)))))))|#
+    ;; We assume that there are at least 2 native functions...
+    (~a "G " call-function-lbl "\t\"call\"\n"
+	"N 1\t124\n"
+	"E\t0 1\t1 1\t" int-lbl "\n"
+	"L\t\t1 2\t" int-lbl " \"0\"\n"
+	"N 2\t129\n"
+	"E\t1 1\t2 1\t" bool-lbl "\n"
+	"{\n"
+	"G 0\n"
+	"E\t0 1\t0 1\t" int-lbl "\n"
+	"G 0\n"
+	(let loop ((cur (cadr function-labels))
+		   (rem (cddr function-labels))
+		   (i 1))
+	  (~a 
+	      "N 1\t124\n"
+	      "E\t0 2\t1 1\t" int-lbl "\n"
+	      "L\t\t1 2\t" int-lbl " \"" i "\"\n"
+	      "N 2\t129\n"
+	      "E\t1 1\t2 1\t" bool-lbl "\n"
+	      "{\n"
+	      "G 0\n"	      
+	      "E\t0 1\t0 1\t" int-lbl "\n"
+	      "G 0\n"
+	      (if (null? rem)
+		(~a "L\t\t0 1\t" typedval-lbl " \"error\"\n")
+		(loop (car rem) (cdr rem) (+ i 1)))
+	      "G 0\n"
+	      "N 1\t120\n"
+	      "L\t\t1 1\t" function-lbl " \"" cur "\"\n"
+	      "E\t0 3\t1 2\t" frame-lbl "\n"
+	      "E\t1 1\t0 1\t" typedval-lbl "\n"
+	      "} 3 1 3 0 1 2\n"
+	      "E\t2 1\t3 1\t" int-lbl "\n"
+	      "E\t0 2\t3 2\t" int-lbl "\n"
+	      "E\t0 3\t3 3\t" frame-lbl "\n"
+	      "E\t3 1\t0 1\t" typedval-lbl "\n"))
+	"G 0\n"
+	"N 1\t120\n"
+	"L\t\t1 1\t" function-lbl " \"" (car function-labels) "\"\n"
+	"E\t0 3\t1 2\t" frame-lbl "\n"
+	"E\t1 1\t0 1\t" typedval-lbl "\n"
+	"} 3 1 3 0 1 2\n"
+	"E\t2 1\t3 1\t" int-lbl "\n"
+	"E\t0 1\t3 2\t" int-lbl "\n"
+	"E\t0 2\t3 3\t" frame-lbl "\n"
+	"E\t3 1\t0 1\t" typedval-lbl "\n\n")))
+
+#|(define (make-call-function program)
+  (let ((function-labels
+	  (append (map (lambda (n) (native-name (cdr n))) natives-list)
+		  (build-list (- (program-count program) (length natives-list))
+			      (lambda (i) (~a "proc" (+ i (length natives-list) -1)))))))
+    ;; We assume that there are at least 2 native functions...
+    (~a "G " call-function-lbl "\t\"call\"\n"
+	"N 1\t124\n"
+	"E\t0 1\t1 1\t" int-lbl "\n"
+	"L\t\t1 2\t" int-lbl " \"1\"\n"
+	"N 2\t129\n"
+	"E\t1 1\t2 1\t" bool-lbl "\n"
+	"{\n"
+	"G 0\n"
+	"E\t0 1\t0 1\t" int-lbl "\n"
+	"G 0\n"
+	"N 1\t120\n"
+	"L\t\t1 1\t" function-lbl " \"" (car function-labels) "\"\n"
+	"E\t0 3\t1 2\t" frame-lbl "\n"
+	"E\t1 1\t0 1\t" typedval-lbl "\n"
+	"G 0\n"
+	(let loop ((cur (cadr function-labels))
+		   (rem (cddr function-labels))
+		   (i 2))
+	  (~a 
+	      "N 1\t124\n"
+	      "E\t0 2\t1 1\t" int-lbl "\n"
+	      "L\t\t1 2\t" int-lbl " \"" i "\"\n"
+	      "N 2\t129\n"
+	      "E\t1 1\t2 1\t" bool-lbl "\n"
+	      "{\n"
+	      "G 0\n"	      
+	      "E\t0 1\t0 1\t" int-lbl "\n"
+	      "G 0\n"
+	      "N 1\t120\n"
+	      "L\t\t1 1\t" function-lbl " \"" cur "\"\n"
+	      "E\t0 3\t1 2\t" frame-lbl "\n"
+	      "E\t1 1\t0 1\t" typedval-lbl "\n"
+	      "G 0\n"
+	      (if (null? rem)
+		(~a "L\t\t0 1\t" typedval-lbl " \"error\"\n")
+		(loop (car rem) (cdr rem) (+ i 1)))
+	      "} 3 1 3 0 2 1\n"
+	      "E\t2 1\t3 1\t" int-lbl "\n"
+	      "E\t0 2\t3 2\t" int-lbl "\n"
+	      "E\t0 3\t3 3\t" frame-lbl "\n"
+	      "E\t3 1\t0 1\t" typedval-lbl "\n"))
+	"} 3 1 3 0 2 1\n"
+	"E\t2 1\t3 1\t" int-lbl "\n"
+	"E\t0 1\t3 2\t" int-lbl "\n"
+	"E\t0 2\t3 3\t" frame-lbl "\n"
+	"E\t3 1\t0 1\t" typedval-lbl "\n\n")))|#
 
 #|(define (make-call-function program)
     (let ((funcs (append (map (lambda (n)
