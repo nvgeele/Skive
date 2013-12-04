@@ -152,7 +152,10 @@
   (let ((function-labels
 	  (append (map (lambda (n) (native-name (cdr n))) natives-list)
 		  (filter (lambda (name) (not (string=? name "entry")))
-			  (map graph-boundary-name (program-boundaries program))))))
+			  (reverse
+			  (map graph-boundary-name (program-boundaries program))
+			  )
+			  ))))
     ;; We assume that there are at least 2 native functions...
     (~a "G " call-function-lbl "\t\"call\"\n"
 	"N 1\t124\n"
