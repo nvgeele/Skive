@@ -201,7 +201,7 @@ N 1	144
 E	0 1	1 1	27	 
 N 2	105	
 E	1 2	2 1	26	 
-L		2 2	4 \"1\"	
+L		2 2	4 \"0\"	
 { Compound   3   2
 G	0	
 N 1	144	
@@ -509,6 +509,6 @@ E	4 1	0 1	10\n")
 		 rt-cons
 		 plus
 		 ;minus
-		 ;multiply
+		 multiply
 		 ;divide
 		 ))

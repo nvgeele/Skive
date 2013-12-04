@@ -15,6 +15,7 @@
 
 (define natives
   (hash '+ (native "plus" 2 #t 0)
+	'* (native "multiply" 2 #t 1)
 	'cons (native "cons" 2 #f '())
 	'car (native "get_car" 1 #f '())
 	'cdr (native "get_cdr" 1 #f '())))
