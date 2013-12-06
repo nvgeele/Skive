@@ -34,34 +34,34 @@
 (define typedval-func-idx   7)
 (define typedval-type-count 7)
 
-(define conscell-lbl (+ typedval-lbl 8))
+(define conscell-lbl    18)
 (define conscell-car-idx 1)
 (define conscell-cdr-idx 2)
 
-(define closure-lbl  (+ conscell-lbl 3))
+(define closure-lbl          21)
 (define closure-func-idx      1)
 (define closure-args-idx      2)
 (define closure-framesize-idx 3)
 (define closure-env-idx       4)
 
-(define typedval-array-lbl (+ closure-lbl 5))
+(define typedval-array-lbl 26)
 
-(define frame-lbl (+ typedval-array-lbl 1))
+(define frame-lbl 27)
 (define frame-prev-idx 1)
 (define frame-bind-idx 2)
 
-(define back-lbl (+ frame-lbl 3))
+(define back-lbl      30)
 (define back-null-idx  2)
 (define back-frame-idx 1)
 
-(define single-frame-tuple-lbl    (+ back-lbl 3))
-(define single-typedval-tuple-lbl (+ back-lbl 4))
-(define function-lbl              (+ back-lbl 5))
+(define single-frame-tuple-lbl    33)
+(define single-typedval-tuple-lbl 34)
+(define function-lbl              35)
 
-(define integer-frame-tuple-lbl   (+ back-lbl 6))
-(define call-function-lbl         (+ back-lbl 7))
+(define integer-frame-tuple-lbl   36)
+(define call-function-lbl         37)
 
-(define main-function-lbl         (+ back-lbl 8))
+(define main-function-lbl         38)
 
 (define (make-basic-type-definition label basic-type)
   (format "T ~s 1 ~s\n" label basic-type))
