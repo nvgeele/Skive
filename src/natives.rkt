@@ -15,7 +15,10 @@
 
 (define natives
   (hash '+ (native "plus" 2 #t 0)
+	'- (native "minus" 2 #t 0)
 	'* (native "multiply" 2 #t 1)
+	'/ (native "divide" 2 #f 1)
+	'=   (native "equal" 2 #f '())
 	'cons (native "cons" 2 #f '())
 	'car (native "get_car" 1 #f '())
 	'cdr (native "get_cdr" 1 #f '())))

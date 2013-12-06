@@ -495,6 +495,103 @@ E	3 1	4 1	10
 E	2 1	4 2	10	 
 E	4 1	0 1	10\n")
 
+(define equal
+"G	35	\"equal\"	
+N 1	144	
+E	0 1	1 1	27	 
+N 2	105	
+E	1 2	2 1	26	 
+L		2 2	4 \"1\"	
+N 3	105	
+E	1 2	3 1	26	 
+L		3 2	4 \"0\"	
+{ Compound   4   2
+G	0	
+{ Compound   1   2
+G	0	
+N 1	143
+L		1 5	1 \"true\"	
+E	1 1	0 1	10	
+G	0	
+N 1	143
+L		1 5	1 \"false\"	
+E	1 1	0 1	10	
+} 1 2 7 0 1 1 1 1 1 1	
+E	0 2	1 1	10	 
+E	1 1	0 1	10	
+G	0	
+{ Compound   1   2
+G	0	
+N 1	124	
+E	0 2	1 1	4	 
+E	0 1	1 2	4	 
+N 2	143
+E	1 1	2 5	1	
+E	2 1	0 1	10	
+G	0	
+N 1	143
+L		1 5	1 \"false\"	
+E	1 1	0 1	10	
+} 1 2 7 1 0 1 1 1 1 1	
+E	0 2	1 1	10	 
+E	0 1	1 2	4	 
+E	1 1	0 1	10	
+G	0	
+{ Compound   1   2
+G	0	
+N 1	124	
+E	0 2	1 1	3	 
+E	0 1	1 2	3	 
+N 2	143
+E	1 1	2 5	1	
+E	2 1	0 1	10	
+G	0	
+N 1	143
+L		1 5	1 \"false\"	
+E	1 1	0 1	10	
+} 1 2 7 1 1 0 1 1 1 1	
+E	0 2	1 1	10	 
+E	0 1	1 2	3	 
+E	1 1	0 1	10	
+G	0	
+{ Compound   1   2
+G	0	
+N 1	124	
+E	0 2	1 1	1	 
+E	0 1	1 2	1	 
+N 2	143
+E	1 1	2 5	1	
+E	2 1	0 1	10	
+G	0	
+N 1	143
+L		1 5	1 \"false\"	
+E	1 1	0 1	10	
+} 1 2 7 1 1 1 1 0 1 1	
+E	0 2	1 1	10	 
+E	0 1	1 2	1	 
+E	1 1	0 1	10	
+G	0	
+N 1	143
+L		1 5	1 \"false\"	
+E	1 1	0 1	10	
+} 4 2 7 0 1 2 4 3 4 4	
+E	3 1	4 1	10	 
+E	2 1	4 2	10	 
+E	4 1	0 1	10	\n")
+
+(define is_false_nat
+"G	39	\"is_false_nat\"	
+{ Compound   1   2
+G	0	
+N 1	139	
+E	0 1	1 1	1	 
+E	1 1	0 1	1	
+G	0	
+L		0 1	1 \"false\"	
+} 1 2 7 1 1 1 1 0 1 1	
+E	0 1	1 1	10	 
+E	1 1	0 1	1\n")
+
 (define (generate-runtime-code)
   (string-append ;is_num
 		 ;is_int
@@ -508,7 +605,9 @@ E	4 1	0 1	10\n")
 		 get_cdr
 		 rt-cons
 		 plus
-		 ;minus
+		 minus
 		 multiply
-		 ;divide
+		 divide
+		 equal
+		 is_false_nat
 		 ))

@@ -32,6 +32,8 @@
 	 (expand (expand-or exp)))
 	((and? exp)
 	 (expand (expand-and exp)))
+	((if? exp)
+	 (expand-if exp))
 	((application? exp)
 	 (let ((red (hash-ref reducible (appl-op exp) #f))
 	       (len (length (appl-args exp))))
@@ -125,6 +127,11 @@
 			   (cadr args))))
 	     ,sym2)
 	   #f)))))
+
+(define (expand-if exp)
+  `(if ,(expand (if-condition exp))
+     ,(expand (if-consequent exp))
+     ,(expand (if-alternative exp))))
 
 ;;; (expand '(let ((a 1) (b 2)) (* a b (let ((c 1)) c)) ((lambda (x) x) 1)))
 ;;; (let ((exp (expand '(or 1 2 3 3 4)))) (display exp)(newline)(eval exp))

@@ -4,6 +4,7 @@
 
 (provide compound-node?
 	 make-tagcase
+	 make-select
 	 compound-node-opcode
 	 compound-node-subgraphs
 	 compound-node-order)
@@ -25,3 +26,6 @@
 ;; for which case or cases.
 (define (make-tagcase boundaries order)
   (compound-node 2 boundaries order))
+
+(define (make-select boundaries order)
+  (compound-node 1 boundaries order))

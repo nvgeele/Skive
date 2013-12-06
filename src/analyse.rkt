@@ -14,7 +14,9 @@
 	  ((self-evaluating? exp)
 	   exp)
 	  ((if? exp)
-	   exp)
+	   `(if ,(analyse (if-condition exp) env)
+	      ,(analyse (if-consequent exp) env)
+	      ,(analyse (if-alternative exp) env)))
 	  ((lambda? exp)
 	   (let ((env (cons env
 			    (lambda-args exp))))

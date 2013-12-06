@@ -48,6 +48,8 @@
 	   (values program gb res)))
 	((lambda? exp)
 	 (generate-lambda exp graph-boundary program))
+	((if? exp)
+	 (generate-if exp graph-boundary program))
 	((application? exp)
 	 (generate-application exp graph-boundary program))
 	(else (error "Incorrect expression -- generate"))))
@@ -167,3 +169,34 @@
 		[(gb) (~> gb
 			  (add-edge op-res 1 cn 1 typedval-lbl))])
     (values program gb cn)))
+
+(define (generate-if exp graph-boundary program)
+  (let*-values ([(program gb test-res)
+		 (generate* (if-condition exp) graph-boundary program)]
+		[(gb litt-node) (add-node gb (make-literal-node "is_false_nat"))]
+		[(gb call-node) (add-node gb (make-simple-node 120))]
+		[(gb int-node)  (add-node gb (make-simple-node 129))]
+		[(gb-select) (~> (make-graph-boundary "")
+				 (add-edge 0 2 0 1 int-lbl))]
+		[(gb-consequent) (make-graph-boundary "")]
+		[(program gb-consequent c-res)
+		 (generate* (if-consequent exp) (make-graph-boundary "") program)]
+		[(gb-consequent)
+		 (add-edge gb-consequent c-res 1 0 1 typedval-lbl)]
+		[(program gb-alternative a-res)
+		 (generate* (if-alternative exp) (make-graph-boundary "") program)]
+		[(gb-alternative)
+		 (add-edge gb-alternative a-res 1 0 1 typedval-lbl)]
+		[(gb sel-node)
+		 (add-node gb (make-select `(,gb-select
+					      ,gb-consequent
+					      ,gb-alternative)
+					   #(0 1 2)))]
+		[(gb)
+		 (~> gb
+		     (add-edge litt-node 1 call-node 1 is-false-nat-func-lbl)
+		     (add-edge test-res 1 call-node 2 typedval-lbl)
+		     (add-edge call-node 1 int-node 1 bool-lbl)
+		     (add-edge int-node 1 sel-node 2 int-lbl)
+		     (add-edge 0 1 sel-node 1 frame-lbl))])
+    (values program gb sel-node)))
