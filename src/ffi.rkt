@@ -4,7 +4,8 @@
 	 ffi/unsafe/define
 	 "typing.rkt")
 
-(provide make-thunk)
+(provide make-thunk
+         parse) ;; TODO: Remove, export for debugging only!
 
 ;;;; Depends on OS/architecture(?)
 (define O_NONBLOCK 4)
@@ -48,31 +49,15 @@
 	    ((char-whitespace? char) (loop res))
 	    (else (loop (cons char res)))))))
 
-(define (read-fibre str)
-  (let ((input (open-input-string str)))
-    (case (read-char input)
-      [(#\u28) (let ((id (string->number (string-trim (read-until input #\:)))))
-                 (cond
-                  ((= id (- typedval-bool-idx 1)) 'bool)
-                  ((= id (- typedval-string-idx 1)) 'string)
-                  ((= id (- typedval-float-idx 1)) 'float)
-                  ((= id (- typedval-int-idx 1))
-                   (string->number (string-trim (read-until input #\u29))))
-                  ((= id (- typedval-null-idx 1))
-                   null)
-                  ((= id (- typedval-cons-idx 1)) 'cons)
-                  (else (error "Incorrect FIBRE syntax(2)"))))]
-      [else (error "Incorrect FIBRE syntax(1)")])))
-
 (define (scan-number input c)
-  '*num*)
-;;  (let loop ((res (list c))
-;;	     (c (peek-char input)))
-;;    (cond ((char-numeric? c)
-;;	   (loop (cons (read-char input))
-;;		 (peek-char input)))
+  (let loop ((chars `(,c)))
+    (let ((c (peek-char input)))
+      (if (char-numeric? c)
+          (loop (cons (read-char input) chars))
+          ;; TODO: Can't this be written a bit, well, better?
+          (string->number (list->string (reverse chars)))))))
 
-(define (scan-string input c)
+(define (scan-string input)
   (let loop ((chars '()))
     (let ((c (read-char input)))
       (cond ((char=? c #\\)
@@ -104,16 +89,47 @@
             ((char-numeric? c)
              (loop input (cons `(num ,(scan-number input c)) tokens)))
             ((char=? c #\") ;; double quote
-             (loop input (cons `(string ,(scan-string input c)) tokens)))
+             (loop input (cons `(string ,(scan-string input)) tokens)))
             ((char=? c #\u23) ;; #
              (read-line input) ;; drop all the rubbish
              (loop input tokens))))))
 
+(define (parse-typedval type tokens)
+  (case type
+    [(1) ;; integer
+     (match tokens
+       [(list-rest (list 'num n) '(rpar) rest)
+        (values n rest)]
+       [_ (error "Incorrect input")])]
+    [(2) null]
+    [(3) ;; string
+     (match tokens
+       [(list-rest (list 'string s) '(rpar) rest)
+        (values s rest)]
+       [_ (error "Incorrect input")])]
+    [(4) null]
+    [(5) ;; cons
+     (match tokens
+       [(list-rest '(st) '(lpar) (list 'num n) '(col) rest)
+        (let-values ([(car tokens) (parse-typedval n rest)])
+          (match tokens
+            [(list-rest '(lpar) (list 'num n) '(col) rest)
+             (let-values ([(cdr tokens) (parse-typedval n rest)])
+               (values (cons car cdr) rest))]
+            [_ (error "Incorrect input")]))]
+       [_ (error "Incorrect input")])]
+    [(6) null]
+    [(7) null]))
+
+(define (parse tokens)
+  (match tokens
+    [(list-rest '(lpar) (list 'num n) '(col)  rest)
+     (let-values ([(value ignore) (parse-typedval n rest)])
+       value)]
+    [_ (error "Incorrect input")]))
+
 (define (parse-fibre-input str)
-  (let ((tokens (scan-fibre str)))
-    (display str)(newline)
-    (display " => ")(newline)
-    tokens))
+  (parse (scan-fibre str)))
 
 (define (make-thunk lib)
   (let-values ([(s-lib) (ffi-lib lib)]
