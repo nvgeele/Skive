@@ -34,29 +34,29 @@
 	     (res "digraph G {\n")
 	     (offset 0))
     (let ((res (string-append
-		 res
-		 (foldl-nodes cur (~a "subgraph \"" (graph-boundary-name cur) "\" {\n")
-			      (lambda (label node res)
-				(let ((node-label (~a "node" (+ label offset)))
-				      (node-text
-					(~a "node " label "\\n"
-					    (cond ((literal-node? node)
-						   (~a "literal: "
-						       (value node)))
-						  ((simple-node? node)
-						   (~a "simple: "
-						       (opcode node)))
-						  (else "compound node")))))
-				  (~a res
-				      (foldl-edges cur label
-						   (~a node-label " [label=\""
-						       node-text "\"];\n")
-						   (lambda (edge res)
-						     (~a res
-							 node-label
-							 " -> node" (+ (edge-out-node edge) offset)
-							 " [label=\"" (edge-out-port edge) "\"];\n")))))))
-		 "}\n")))
+                res
+                (foldl-nodes cur (~a "subgraph \"" (graph-boundary-name cur) "\" {\n")
+                             (lambda (label node res)
+                               (let ((node-label (~a "node" (+ label offset)))
+                                     (node-text
+                                      (~a "node " label "\\n"
+                                          (cond ((literal-node? node)
+                                                 (~a "literal: "
+                                                     (value node)))
+                                                ((simple-node? node)
+                                                 (~a "simple: "
+                                                     (opcode node)))
+                                                (else "compound node")))))
+                                 (~a res
+                                     (foldl-edges cur label
+                                                  (~a node-label " [label=\""
+                                                      node-text "\"];\n")
+                                                  (lambda (edge res)
+                                                    (~a res
+                                                        node-label
+                                                        " -> node" (+ (edge-out-node edge) offset)
+                                                        " [label=\"" (edge-out-port edge) "\"];\n")))))))
+                "}\n")))
       (if (null? rem)
-	(string-append res "}")
-	(loop (car rem) (cdr rem) res (+ offset (label-counter cur)))))))
+          (string-append res "}")
+          (loop (car rem) (cdr rem) res (+ offset (label-counter cur)))))))

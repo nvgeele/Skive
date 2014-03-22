@@ -12,7 +12,7 @@
 (define (self-evaluating? exp)
   (or (integer? exp)
       (string? exp)
-      ;(symbol? exp)
+      ;;(symbol? exp)
       (boolean? exp)
       (null? exp)))
 

@@ -31,18 +31,18 @@
 (define edges graph-boundary-edges)
 
 (define (make-graph-boundary ;type
-	  name [global #f])
+         name [global #f])
   (graph-boundary ;type
-    name 1 (hash) '() global))
+   name 1 (hash) '() global))
 
 (define (add-node gb node)
   (values
-    (struct-copy graph-boundary gb
-		 [label-counter (+ 1 (label-counter gb))]
-		 [nodes (hash-set (nodes gb)
-				  (label-counter gb)
-				  node)])
-    (label-counter gb)))
+   (struct-copy graph-boundary gb
+                [label-counter (+ 1 (label-counter gb))]
+                [nodes (hash-set (nodes gb)
+                                 (label-counter gb)
+                                 node)])
+   (label-counter gb)))
 
 (define (port-free? gb node port)
   (not (ormap (lambda (edge) (and (= node (edge-out-node edge))
@@ -60,14 +60,14 @@
 	  ((not (port-free? gb out-id out-port))
 	   (error "One of the ports is already connected -- add-edge"))
 	  (else
-	    (struct-copy graph-boundary gb
-			 [edges (cons (if type-lbl
-					(make-edge in-id in-port
-						   out-id out-port
-						   type-lbl)
-					(make-edge in-id in-port
-						   out-id out-port))
-				      edges)])))))
+           (struct-copy graph-boundary gb
+                        [edges (cons (if type-lbl
+                                         (make-edge in-id in-port
+                                                    out-id out-port
+                                                    type-lbl)
+                                         (make-edge in-id in-port
+                                                    out-id out-port))
+                                     edges)])))))
 
 (define (set-boundary-name boundary new-name)
   (struct-copy graph-boundary boundary
@@ -76,14 +76,14 @@
 ;; proc: label node -> any
 (define (for-each-node gb proc)
   (for ([(label node) (nodes gb)])
-       (proc label node)))
+    (proc label node)))
 
 ;; proc: edge -> any
 (define (for-each-edge gb node proc)
   (for ([edge (filter (lambda (edge)
 			(= node (edge-in-node edge)))
 		      (edges gb))])
-       (proc edge)))
+    (proc edge)))
 
 ;; proc: label node any -> any
 (define (foldl-nodes gb init proc)
@@ -110,14 +110,14 @@
 		   (lambda (label node res)
 		     (let ((node-label (~a "node" label))
 			   (node-text
-			     (~a "node " label "\\n"
-				 (cond ((literal-node? node)
-					(~a "literal: "
-					    (value node)))
-				       ((simple-node? node)
-					(~a "simple: "
-					    (opcode node)))
-				       (else "compound node")))))
+                            (~a "node " label "\\n"
+                                (cond ((literal-node? node)
+                                       (~a "literal: "
+                                           (value node)))
+                                      ((simple-node? node)
+                                       (~a "simple: "
+                                           (opcode node)))
+                                      (else "compound node")))))
 		       (~a res
 			   (foldl-edges gb label
 					(~a node-label " [label=\""
@@ -138,8 +138,8 @@
 					    (edges gb)))))
       (let* ((cell (foldl (lambda (to c)
 			    (if (set-member? (car c) to)
-			      c
-			      (dft-rec to (cdr c) (set-add (car c) to))))
+                                c
+                                (dft-rec to (cdr c) (set-add (car c) to))))
 			  (cons visited stack)
 			  edges))
 	     (stack (cdr cell))
@@ -148,8 +148,8 @@
 	      (cons from stack)))))
   (cdr (foldl (lambda (from cell)
 		(if (set-member? (car cell) from)
-		  cell
-		  (dft-rec from (cdr cell) (set-add (car cell) from))))
+                    cell
+                    (dft-rec from (cdr cell) (set-add (car cell) from))))
 	      (cons (set) '())
 	      (map car (hash->list (nodes gb))))))
 

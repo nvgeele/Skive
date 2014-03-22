@@ -40,35 +40,35 @@
     (display code out)
     (close-output-port out)
     (let-values ([(sp out in err) (subprocess #f #f #f
-					      sisal-compiler-path 
+					      sisal-compiler-path
 					      "-C" code-file)])
       (subprocess-wait sp)
       (close-output-port in)(close-input-port out)(close-input-port err)
       (if (file-exists? csrc-file)
-	(let-values ([(sp out in err) (subprocess #f #f #f
-						  gcc-path csrc-file
-						  "-fPIC"
-						  "-c" "-o" cobj-file
-						  (~a "-I" sisal-include-path)
-						  "-g" "-O2")])
-	  (subprocess-wait sp)
-	  (close-output-port in)(close-input-port out)(close-input-port err)
-	  (if (file-exists? cobj-file)
-	    (let-values ([(sp out in err) (subprocess #f #f #f
-						      gcc-path
-						      "-o" out-file
-						      runtime-object-path
-						      cobj-file
-						      (if (eq? type 'lib)
-							"-shared" "")
-						      (~a "-L" sisal-lib-path)
-						      "-lsisal" "-lm")])
-	      (subprocess-wait sp)
-	      (close-output-port in)(close-input-port out)(close-input-port err)
-	      (delete-file code-file)(delete-file csrc-file)(delete-file cobj-file)
-	      (unless (eq? type 'exe) (delete-file code-prefix))
-	      (if (file-exists? out-file)
-		out-file
-		(error "Could not compile output file -- compile-if1-to-native")))
-	    (error "Could not compile C source to object file -- compile-if1-to-native")))
-	(error "Could not create C source file -- compile-if1-to-native")))))
+          (let-values ([(sp out in err) (subprocess #f #f #f
+                                                    gcc-path csrc-file
+                                                    "-fPIC"
+                                                    "-c" "-o" cobj-file
+                                                    (~a "-I" sisal-include-path)
+                                                    "-g" "-O2")])
+            (subprocess-wait sp)
+            (close-output-port in)(close-input-port out)(close-input-port err)
+            (if (file-exists? cobj-file)
+                (let-values ([(sp out in err) (subprocess #f #f #f
+                                                          gcc-path
+                                                          "-o" out-file
+                                                          runtime-object-path
+                                                          cobj-file
+                                                          (if (eq? type 'lib)
+                                                              "-shared" "")
+                                                          (~a "-L" sisal-lib-path)
+                                                          "-lsisal" "-lm")])
+                  (subprocess-wait sp)
+                  (close-output-port in)(close-input-port out)(close-input-port err)
+                  (delete-file code-file)(delete-file csrc-file)(delete-file cobj-file)
+                  (unless (eq? type 'exe) (delete-file code-prefix))
+                  (if (file-exists? out-file)
+                      out-file
+                      (error "Could not compile output file -- compile-if1-to-native")))
+                (error "Could not compile C source to object file -- compile-if1-to-native")))
+          (error "Could not create C source file -- compile-if1-to-native")))))
