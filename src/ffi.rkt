@@ -72,42 +72,48 @@
 ;;	   (loop (cons (read-char input))
 ;;		 (peek-char input)))
 
-(define (make-fibre-scanner str)
-  (display str)
-  (letrec ((input (open-input-string str))
-	   (scanner
-            (lambda (input)
-              (let ((c (read-char input)))
-                (cond ((eof-object? c)
-                       (values c (lambda () (scanner input))))
-                      ((char-whitespace? c)
-                       (scanner input))
-                      ((char=? c #\u28) ;; (
-                       (values '(lpar) (lambda () (scanner input))))
-                      ((char=? c #\u29) ;; )
-                       (values '(rpar) (lambda () (scanner input))))
-                      ((char=? c #\u3c) ;; <
-                       (values '(st) (lambda () (scanner input))))
-                      ((char=? c #\u3e) ;; >
-                       (values '(gt) (lambda () (scanner input))))
-                      ((char=? c #\u3a)
-                       (values '(col) (lambda () (scanner input))))
-                      ((char-numeric? c)
-                       (values `(num ,(scan-number input c)) (lambda () (scanner input))))
-                      ((char=? c #\u23)
-                       (read-line input) ;; drop all the rubbish
-                       (scanner input)))))))
-    (lambda ()
-      (scanner input))))
+(define (scan-string input c)
+  (let loop ((chars '()))
+    (let ((c (read-char input)))
+      (cond ((char=? c #\\)
+             (loop (cons (read-char input)
+                         (cons c chars))))
+            ((char=? c #\")
+             (list->string (reverse chars)))
+            (else
+             (loop (cons c chars)))))))
+
+(define (scan-fibre str)
+  (let loop ((input (open-input-string str))
+             (tokens '()))
+    (let ((c (read-char input)))
+      (cond ((eof-object? c)
+             (reverse tokens))
+            ((char-whitespace? c)
+             (loop input tokens))
+            ((char=? c #\u28) ;; (
+             (loop input (cons '(lpar) tokens)))
+            ((char=? c #\u29) ;; )
+             (loop input (cons '(rpar) tokens)))
+            ((char=? c #\u3c) ;; <
+             (loop input (cons '(st) tokens)))
+            ((char=? c #\u3e) ;; >
+             (loop input (cons '(gt) tokens)))
+            ((char=? c #\u3a) ;; :
+             (loop input (cons '(col) tokens)))
+            ((char-numeric? c)
+             (loop input (cons `(num ,(scan-number input c)) tokens)))
+            ((char=? c #\") ;; double quote
+             (loop input (cons `(string ,(scan-string input c)) tokens)))
+            ((char=? c #\u23) ;; #
+             (read-line input) ;; drop all the rubbish
+             (loop input tokens))))))
 
 (define (parse-fibre-input str)
-  (let loop ((scanner (make-fibre-scanner str))
-	     (res '()))
-    (let-values ([(token scanner) (scanner)])
-      (if (eof-object? token)
-          res
-          (begin (display token)(newline)
-                 (loop scanner res))))))
+  (let ((tokens (scan-fibre str)))
+    (display str)(newline)
+    (display " => ")(newline)
+    tokens))
 
 (define (make-thunk lib)
   (let-values ([(s-lib) (ffi-lib lib)]
@@ -156,8 +162,7 @@
 	(StopWorkers)
 	(WriteFibreOutputs (get-ffi-obj "SisalMainArgs" s-lib _pointer))
 	(fflush out-fs)
-                                        ;(read-fibre (read-from-fs in-fs))
+        ;;(read-fibre (read-from-fs in-fs))
 	(let ((str (read-from-fs in-fs)))
-                                        ;(make-fibre-scanner str))
-	  (parse-fibre-input str))
-	))))
+          ;;(make-fibre-scanner str))
+	  (parse-fibre-input str))))))
