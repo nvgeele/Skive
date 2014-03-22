@@ -6,7 +6,8 @@
 	 lambda? lambda-args lambda-body
 	 if? if-condition if-consequent if-alternative
 	 or? and?
-	 lexical-address? frame offset)
+	 lexical-address? frame offset
+         definition? definition-variable definition-value)
 
 (define (self-evaluating? exp)
   (or (integer? exp)
@@ -79,3 +80,14 @@
 
 (define (offset exp)
   (vector-ref exp 1))
+
+;;;; Define
+(define (definition? exp)
+  (and (list? exp)
+       (eq? (car exp) 'define)))
+
+(define (definition-variable exp)
+  (cadr exp))
+
+(define (definition-value exp)
+  (cddr exp))

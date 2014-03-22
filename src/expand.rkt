@@ -34,6 +34,8 @@
 	 (expand (expand-and exp)))
 	((if? exp)
 	 (expand-if exp))
+        ((definition? exp)
+         (expand-definition exp))
 	((application? exp)
 	 (let ((red (hash-ref reducible (appl-op exp) #f))
 	       (len (length (appl-args exp))))
@@ -132,6 +134,14 @@
   `(if ,(expand (if-condition exp))
      ,(expand (if-consequent exp))
      ,(expand (if-alternative exp))))
+
+(define (expand-definition exp)
+  (if (list? (definition-variable exp))
+      `(define ,(car (definition-variable exp))
+         (lambda ,(cdr (definition-variable exp))
+           ,@(map expand (definition-value exp))))
+      `(define ,(definition-variable exp)
+         ,(expand (car (definition-value exp))))))
 
 ;;; (expand '(let ((a 1) (b 2)) (* a b (let ((c 1)) c)) ((lambda (x) x) 1)))
 ;;; (let ((exp (expand '(or 1 2 3 3 4)))) (display exp)(newline)(eval exp))
