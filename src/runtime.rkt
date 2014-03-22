@@ -13,6 +13,8 @@
     ;;is_bool
     ;;is_cons
     ;;is_false
+    ;;is_symbol
+    ;;is_list
     get_car
     get_cdr
     rt-cons
@@ -24,10 +26,15 @@
     is_false_nat))
 
 (define (generate-runtime-code)
-  (foldl
-   (lambda (proc str)
-     (string-append
-      str
-      (file->string (string-append "./if1/" (symbol->string proc) ".if1"))))
-   ""
-   runtime-list))
+  (let-values
+      ([(path ignore ignore2) (split-path (current-contract-region))])
+    (foldl
+     (lambda (proc str)
+       (string-append
+        str
+        (file->string (string-append
+                       (path->string path)
+                       "if1/"
+                       (symbol->string proc) ".if1"))))
+     ""
+     runtime-list)))
