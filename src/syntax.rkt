@@ -7,8 +7,16 @@
 	 if? if-condition if-consequent if-alternative
 	 or? and?
 	 lexical-address? frame offset
-         definition? definition-variable definition-value)
+         definition? definition-variable definition-value
+         quote? quote-value
+         letrec? letrec-definitions letrec-body)
 
+;;;; Auxiliary
+(define (tagged-list? tag list)
+  (and (list? list)
+       (eq? (car list) tag)))
+
+;;;; Self-evaluating
 (define (self-evaluating? exp)
   (or (integer? exp)
       (string? exp)
@@ -28,8 +36,7 @@
 
 ;;;; Let expressions
 (define (let? exp)
-  (and (list? exp)
-       (eq? (car exp) 'let)))
+  (tagged-list? 'let exp))
 
 (define (let-definitions exp)
   (cadr exp))
@@ -39,8 +46,7 @@
 
 ;;;; Lambda expressions
 (define (lambda? exp)
-  (and (list? exp)
-       (eq? (car exp) 'lambda)))
+  (tagged-list? 'lambda exp))
 
 (define (lambda-args exp)
   (cadr exp))
@@ -50,8 +56,7 @@
 
 ;;;; If expressions
 (define (if? exp)
-  (and (list? exp)
-       (eq? (car exp) 'if)))
+  (tagged-list? 'if exp))
 
 (define (if-condition exp)
   (cadr exp))
@@ -64,12 +69,10 @@
 
 ;;;; and/or
 (define (or? exp)
-  (and (list? exp)
-       (eq? (car exp) 'or)))
+  (tagged-list? 'or exp))
 
 (define (and? exp)
-  (and (list? exp)
-       (eq? (car exp) 'and)))
+  (tagged-list? 'and exp))
 
 ;;;; Lexical addressing
 (define (lexical-address? exp)
@@ -83,11 +86,27 @@
 
 ;;;; Define
 (define (definition? exp)
-  (and (list? exp)
-       (eq? (car exp) 'define)))
+  (tagged-list? 'define exp))
 
 (define (definition-variable exp)
   (cadr exp))
 
 (define (definition-value exp)
   (cddr exp))
+
+;;;; Letrec
+(define (letrec? exp)
+  (tagged-list? 'letrec exp))
+
+(define (letrec-definitions exp)
+  (cadr exp))
+
+(define (letrec-body exp)
+  (cddr exp))
+
+;;;; Quote
+(define (quote? exp)
+  (tagged-list? 'quote exp))
+
+(define (quote-value exp)
+  (cadr exp))
