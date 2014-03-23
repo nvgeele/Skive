@@ -36,6 +36,8 @@
 	 (expand-if exp))
         ((definition? exp)
          (expand-definition exp))
+        ((quote? exp)
+         exp)
 	((application? exp)
 	 (let ((red (hash-ref reducible (appl-op exp) #f))
 	       (len (length (appl-args exp))))
