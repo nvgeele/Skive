@@ -89,6 +89,8 @@
 								   typedval-int-idx))
 					   ((string? exp) (values string-lbl
 								  typedval-string-idx))
+                                           ((null? exp) (values null-lbl
+                                                                typedval-null-idx))
 					   (else (error "Unknown error")))]
 		[(gb blbl) (add-node graph-boundary build-node)]
 		[(gb llbl) (add-node gb lit-node)]
@@ -136,7 +138,8 @@
     (cond ((symbol? (quote-value exp))
            (error "We don't have symbols yet -- generate"))
           ((null? (quote-value exp))
-           (error "We don't have null yet -- generate"))
+           (let-values ([(gb lbl) (generate-self-evaluating graph-boundary null)])
+             (values program gb lbl)))
           (else
            (error "We don't have quoted lists yet -- generate"))))
    (else

@@ -5,7 +5,7 @@
 	 "typing.rkt")
 
 (provide make-thunk
-         parse) ;; TODO: Remove, export for debugging only!
+         parse parse-fibre-input scan-fibre) ;; TODO: Remove, export for debugging only!
 
 ;;;; Depends on OS/architecture(?)
 (define O_NONBLOCK 4)
@@ -92,10 +92,19 @@
              (loop input (cons `(string ,(scan-string input)) tokens)))
             ((char=? c #\u23) ;; #
              (read-line input) ;; drop all the rubbish
-             (loop input tokens))))))
+             (loop input tokens))
+            ((char=? c #\n) ;; nil (literal)
+             (read-char input) ;; read #\i
+             (read-char input) ;; read #\l
+             (loop input (cons '(nil) tokens)))))))
 
 (define (parse-typedval type tokens)
   (case type
+    [(0) ;; null
+     (match tokens
+       [(list-rest '(nil) '(rpar) rest)
+        (values null rest)]
+       [_ (error "Incorrect input")])]
     [(1) ;; integer
      (match tokens
        [(list-rest (list 'num n) '(rpar) rest)
