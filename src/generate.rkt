@@ -133,36 +133,24 @@
 (define (generate-quoted-list program graph-boundary list)
   (error "Not supported yet"))
 
-(define (generate-list*)
-  (error "Who you callin black?"))
-
 (define (generate-list program graph-boundary list)
   (let ((list (reverse list)))
-    (let*-values ([(gb nlbl) (generate-self-evaluating graph-boundary null)]
-                  [(program gb res) (generate* (car list) gb program)]
-                  [(gb cons-bld) (add-node gb (make-simple-node 143))]
-                  [(gb tval-bld) (add-node gb (make-simple-node 143))]
-                  [(gb) (~> gb
-                            (add-edge nlbl 1 cons-bld 2 typedval-lbl)
-                            (add-edge res 1 cons-bld 1 typedval-lbl)
-                            (add-edge cons-bld 1 tval-bld typedval-cons-idx conscell-lbl))])
-      (if (null? (cdr list))
-          (values program gb tval-bld)
-          (let loop ((cur (cadr list))
-                     (rem (cddr list))
-                     (gb gb)
-                     (program program)
-                     (prev tval-bld))
-            (let*-values ([(program gb res) (generate* cur gb program)]
-                          [(gb cons-bld) (add-node gb (make-simple-node 143))]
-                          [(gb tval-bld) (add-node gb (make-simple-node 143))]
-                          [(gb) (~> gb
-                                    (add-edge prev 1 cons-bld 2 typedval-lbl)
-                                    (add-edge res 1 cons-bld 1 typedval-lbl)
-                                    (add-edge cons-bld 1 tval-bld typedval-cons-idx conscell-lbl))])
-              (if (null? rem)
-                  (values program gb tval-bld)
-                  (loop (car rem) (cdr rem) gb program tval-bld))))))))
+    (let-values ([(gb nlbl) (generate-self-evaluating graph-boundary null)])
+      (let loop ((cur (car list))
+                 (rem (cdr list))
+                 (gb gb)
+                 (program program)
+                 (prev nlbl))
+        (let*-values ([(program gb res) (generate* cur gb program)]
+                      [(gb cons-bld) (add-node gb (make-simple-node 143))]
+                      [(gb tval-bld) (add-node gb (make-simple-node 143))]
+                      [(gb) (~> gb
+                                (add-edge prev 1 cons-bld 2 typedval-lbl)
+                                (add-edge res 1 cons-bld 1 typedval-lbl)
+                                (add-edge cons-bld 1 tval-bld typedval-cons-idx conscell-lbl))])
+          (if (null? rem)
+              (values program gb tval-bld)
+              (loop (car rem) (cdr rem) gb program tval-bld)))))))
 
 (define (generate-application exp graph-boundary program)
   (cond
