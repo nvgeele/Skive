@@ -130,15 +130,52 @@
               (values program gb (reverse (cons res lst)))
               (loop (car rem) (cdr rem) (cons res lst) gb program))))))
 
+(define (generate-quoted-list program graph-boundary list)
+  (error "Not supported yet"))
+
+(define (generate-list*)
+  (error "Who you callin black?"))
+
+(define (generate-list program graph-boundary list)
+  (let ((list (reverse list)))
+    (let*-values ([(gb nlbl) (generate-self-evaluating graph-boundary null)]
+                  [(program gb res) (generate* (car list) gb program)]
+                  [(gb cons-bld) (add-node gb (make-simple-node 143))]
+                  [(gb tval-bld) (add-node gb (make-simple-node 143))]
+                  [(gb) (~> gb
+                            (add-edge nlbl 1 cons-bld 2 typedval-lbl)
+                            (add-edge res 1 cons-bld 1 typedval-lbl)
+                            (add-edge cons-bld 1 tval-bld typedval-cons-idx conscell-lbl))])
+      (if (null? (cdr list))
+          (values program gb tval-bld)
+          (let loop ((cur (cadr list))
+                     (rem (cddr list))
+                     (gb gb)
+                     (program program)
+                     (prev tval-bld))
+            (let*-values ([(program gb res) (generate* cur gb program)]
+                          [(gb cons-bld) (add-node gb (make-simple-node 143))]
+                          [(gb tval-bld) (add-node gb (make-simple-node 143))]
+                          [(gb) (~> gb
+                                    (add-edge prev 1 cons-bld 2 typedval-lbl)
+                                    (add-edge res 1 cons-bld 1 typedval-lbl)
+                                    (add-edge cons-bld 1 tval-bld typedval-cons-idx conscell-lbl))])
+              (if (null? rem)
+                  (values program gb tval-bld)
+                  (loop (car rem) (cdr rem) gb program tval-bld))))))))
+
 (define (generate-application exp graph-boundary program)
   (cond
    ((eq? (appl-op exp) 'list)
-    (error "We don't have 'list yet -- generate"))
+    (let-values ([(program gb lbl)
+                  (generate-list program graph-boundary (cdr exp))])
+      (values program gb lbl)))
    ((eq? (appl-op exp) 'quote)
     (cond ((symbol? (quote-value exp))
            (error "We don't have symbols yet -- generate"))
           ((null? (quote-value exp))
-           (let-values ([(gb lbl) (generate-self-evaluating graph-boundary null)])
+           (let-values ([(gb lbl)
+                         (generate-self-evaluating graph-boundary null)])
              (values program gb lbl)))
           (else
            (error "We don't have quoted lists yet -- generate"))))

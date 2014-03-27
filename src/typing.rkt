@@ -7,6 +7,7 @@
          typedval-float-idx typedval-string-idx
          typedval-bool-idx typedval-cons-idx
          typedval-func-idx typedval-type-count
+         conscell-lbl conscell-car-idx conscell-cdr-idx
          frame-lbl frame-prev-idx frame-bind-idx
          back-lbl back-null-idx back-frame-idx
          closure-lbl
