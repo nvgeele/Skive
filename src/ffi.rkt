@@ -104,18 +104,18 @@
      (match tokens
        [(list-rest '(nil) '(rpar) rest)
         (values null rest)]
-       [_ (error "Incorrect input")])]
+       [_ (error "Incorrect input -- parse null")])]
     [(1) ;; integer
      (match tokens
        [(list-rest (list 'num n) '(rpar) rest)
         (values n rest)]
-       [_ (error "Incorrect input")])]
+       [_ (error "Incorrect input -- parse int")])]
     [(2) null]
     [(3) ;; string
      (match tokens
        [(list-rest (list 'string s) '(rpar) rest)
         (values s rest)]
-       [_ (error "Incorrect input")])]
+       [_ (error "Incorrect input -- parse string")])]
     [(4) null]
     [(5) ;; cons
      (match tokens
@@ -124,9 +124,10 @@
           (match tokens
             [(list-rest '(lpar) (list 'num n) '(col) rest)
              (let-values ([(cdr tokens) (parse-typedval n rest)])
-               (values (cons car cdr) rest))]
-            [_ (error "Incorrect input")]))]
-       [_ (error "Incorrect input")])]
+               ;; cddr because we need to pop off 'gt and 'rpar
+               (values (cons car cdr) (cddr tokens)))]
+            [_ (display tokens)(error "Incorrect input -- parse cons 1")]))]
+       [_ (error "Incorrect input -- parse cons 2")])]
     [(6) null]
     [(7) null]))
 
@@ -135,7 +136,7 @@
     [(list-rest '(lpar) (list 'num n) '(col)  rest)
      (let-values ([(value ignore) (parse-typedval n rest)])
        value)]
-    [_ (error "Incorrect input")]))
+    [_ (error "Incorrect input -- parse")]))
 
 (define (parse-fibre-input str)
   (parse (scan-fibre str)))

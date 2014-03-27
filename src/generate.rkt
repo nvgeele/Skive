@@ -91,7 +91,7 @@
 								  typedval-string-idx))
                                            ((null? exp) (values null-lbl
                                                                 typedval-null-idx))
-					   (else (error "Unknown error")))]
+					   (else (error "Unknown self-evaluating value -- generate")))]
 		[(gb blbl) (add-node graph-boundary build-node)]
 		[(gb llbl) (add-node gb lit-node)]
 		[(gb) (add-edge gb llbl 1 blbl type-idx type-lbl)])
@@ -130,8 +130,23 @@
               (values program gb (reverse (cons res lst)))
               (loop (car rem) (cdr rem) (cons res lst) gb program))))))
 
-(define (generate-quoted-list program graph-boundary list)
-  (error "Not supported yet"))
+(define (generate-quoted-list graph-boundary list)
+  (let ((list (reverse list)))
+    (let-values ([(gb nlbl) (generate-self-evaluating graph-boundary null)])
+      (let loop ((cur (car list))
+                 (rem (cdr list))
+                 (gb gb)
+                 (prev nlbl))
+        (let*-values ([(gb res) (generate-self-evaluating gb cur)]
+                      [(gb cons-bld) (add-node gb (make-simple-node 143))]
+                      [(gb tval-bld) (add-node gb (make-simple-node 143))]
+                      [(gb) (~> gb
+                                (add-edge prev 1 cons-bld 2 typedval-lbl)
+                                (add-edge res 1 cons-bld 1 typedval-lbl)
+                                (add-edge cons-bld 1 tval-bld typedval-cons-idx conscell-lbl))])
+          (if (null? rem)
+              (values gb tval-bld)
+              (loop (car rem) (cdr rem) gb tval-bld)))))))
 
 (define (generate-list program graph-boundary list)
   (let ((list (reverse list)))
@@ -166,7 +181,9 @@
                          (generate-self-evaluating graph-boundary null)])
              (values program gb lbl)))
           (else
-           (error "We don't have quoted lists yet -- generate"))))
+           (let-values ([(gb lbl)
+                         (generate-quoted-list graph-boundary (cadr exp))])
+             (values program gb lbl)))))
    (else
     (let*-values ([(gb-call) (make-graph-boundary "")]
                   [(gb-fail) (make-graph-boundary "")]
