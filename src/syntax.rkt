@@ -22,7 +22,9 @@
       (string? exp)
       ;;(symbol? exp)
       (boolean? exp)
-      (null? exp)))
+      (null? exp)
+      (eq? exp #t)
+      (false? exp)))
 
 ;;;; Application
 (define (application? exp)

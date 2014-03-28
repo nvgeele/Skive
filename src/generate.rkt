@@ -83,15 +83,20 @@
                 tagcase)))))
 
 (define (generate-self-evaluating graph-boundary exp)
-  (let*-values ([(lit-node build-node) (values (make-literal-node exp)
+  (let*-values ([(type-lbl type-idx exp) (cond ((integer? exp) (values int-lbl
+                                                                       typedval-int-idx
+                                                                       exp))
+                                               ((string? exp) (values string-lbl
+                                                                      typedval-string-idx
+                                                                      exp))
+                                               ((null? exp) (values null-lbl
+                                                                    typedval-null-idx
+                                                                    exp))
+                                               ((or (false? exp) (eq? exp #t))
+                                                (values bool-lbl typedval-bool-idx (if (false? exp) "F" "T")))
+                                               (else (error "Unknown self-evaluating value -- generate")))]
+                [(lit-node build-node) (values (make-literal-node exp)
 					       (make-simple-node 143))]
-		[(type-lbl type-idx) (cond ((integer? exp) (values int-lbl
-								   typedval-int-idx))
-					   ((string? exp) (values string-lbl
-								  typedval-string-idx))
-                                           ((null? exp) (values null-lbl
-                                                                typedval-null-idx))
-					   (else (error "Unknown self-evaluating value -- generate")))]
 		[(gb blbl) (add-node graph-boundary build-node)]
 		[(gb llbl) (add-node gb lit-node)]
 		[(gb) (add-edge gb llbl 1 blbl type-idx type-lbl)])

@@ -96,7 +96,11 @@
             ((char=? c #\n) ;; nil (literal)
              (read-char input) ;; read #\i
              (read-char input) ;; read #\l
-             (loop input (cons '(nil) tokens)))))))
+             (loop input (cons '(nil) tokens)))
+            ((char=? c #\T) ;; literal true
+             (loop input (cons '(bool #t) tokens)))
+            ((char=? c #\F) ;; literal false
+             (loop input (cons '(bool #f) tokens)))))))
 
 (define (parse-typedval type tokens)
   (case type
@@ -116,7 +120,11 @@
        [(list-rest (list 'string s) '(rpar) rest)
         (values s rest)]
        [_ (error "Incorrect input -- parse string")])]
-    [(4) null]
+    [(4) ;; Bool
+     (match tokens
+       [(list-rest (list 'bool b) '(rpar) rest)
+        (values b rest)]
+       [_ (error "Incorrect input -- parse bool")])]
     [(5) ;; cons
      (match tokens
        [(list-rest '(st) '(lpar) (list 'num n) '(col) rest)
