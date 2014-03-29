@@ -28,6 +28,8 @@
                  ,vars
 	       ,@(map expand body))
 	     ,@(map expand args))))
+        ((letrec? exp)
+         (expand (expand-letrec exp)))
 	((or? exp)
 	 (expand (expand-or exp)))
 	((and? exp)
@@ -145,6 +147,108 @@
       `(define ,(definition-variable exp)
          ,(expand (car (definition-value exp))))))
 
-;;; (expand '(let ((a 1) (b 2)) (* a b (let ((c 1)) c)) ((lambda (x) x) 1)))
-;;; (let ((exp (expand '(or 1 2 3 3 4)))) (display exp)(newline)(eval exp))
-;;; (let ((exp (expand '(or 1 2 3 3 (display "test"))))) (display exp)(newline)(eval exp))
+(define (build-recursion-list* names exp)
+  (cond ((or (self-evaluating? exp)
+             (symbol? exp))
+         (if (member exp names)
+             `(,exp)
+             '()))
+        ((quote? exp)
+         '())
+        ((application? exp)
+         (apply append
+                (map (lambda (exp)
+                       (build-recursion-list* names exp))
+                     (cons (appl-op exp)
+                           (appl-args exp)))))
+        (else "Unknown error")))
+
+(define (build-recursion-list def names)
+  (let ((name (car def))
+        (body (cadr def)))
+    (if (lambda? body)
+        (cons name
+              (build-recursion-list*
+               (set-subtract names (lambda-args body))
+               (lambda-body body)))
+        (cons name '()))))
+
+(define (build-argument-lists recursion-lists)
+  (for/list ([func recursion-lists])
+    (let ((name (car func))
+          (calls (cdr func)))
+      (cons name
+            (if (null? calls)
+                '()
+                (set->list
+                 (list->set (append calls
+                                    (flatten
+                                     (map (lambda (n)
+                                            (cdr (assoc n recursion-lists)))
+                                          calls))))))))))
+
+(define (replace-recursive-calls exp names argument-lists)
+  (cond ((or (self-evaluating? exp)
+             (symbol? exp))
+         exp)
+        ((quote? exp)
+         exp)
+        ((application? exp)
+         (if (member (appl-op exp) names)
+             `(,(appl-op exp)
+               ,@(map (lambda (exp)
+                        (replace-recursive-calls exp names argument-lists))
+                      (appl-args exp))
+               ,@(cdr (assoc (appl-op exp) argument-lists)))
+             `(,(replace-recursive-calls (appl-op exp) names argument-lists)
+               ,@(map (lambda (exp)
+                        (replace-recursive-calls exp names argument-lists))
+                      (appl-args exp)))))
+        (else "Unknown error")))
+
+(define (adapt-definitions definitions argument-lists names)
+  (for/list ([def definitions])
+    (let* ((name (car def))
+           (arg-list (cdr (assoc name argument-lists))))
+      (if (null? arg-list)
+          (cons def '())
+          (let* ((original-arg-list
+                  (lambda-args (cadr def)))
+                 (full-arg-list
+                  (append original-arg-list arg-list)))
+            (cons `(,name (lambda ,full-arg-list
+                            ,@(map (lambda (exp)
+                                     (replace-recursive-calls exp
+                                                              names
+                                                              argument-lists))
+                                   (lambda-body (cadr def)))))
+                  `(,name (lambda ,original-arg-list
+                            (,name ,@full-arg-list)))))))))
+
+;; How does this expansion work?
+;; First, we iterate over all definitions (build-recursion-list).
+;; If a definition is a function, we perform some kind of abstract
+;; evaluation (build-recursion-list*) to see if any (mutually)
+;; recursive calls occur, or another definition from the list is
+;; referenced in the function body. (build-argument-lists) uses
+;; this information to build a list of arguments the partial
+;; functions need. This information is then again used in
+;; (adapt-definitions), which will generate definitions for the
+;; partial functions (if needed) by replacing recursive calls to
+;; make sure all the correct parameters will be passed to make
+;; possible recursive calls. The result of the expansion is two
+;; nested let-expressions.
+
+(define (expand-letrec exp)
+  (let* ((names (map car (letrec-definitions exp)))
+         (recursion-lists (map (lambda (def)
+                                 (build-recursion-list def names))
+                               (letrec-definitions exp)))
+         (argument-lists (build-argument-lists recursion-lists))
+         (definitions (adapt-definitions (letrec-definitions exp)
+                                         argument-lists
+                                         names)))
+    `(let ,(map car definitions)
+       (let ,(filter (compose not null?)
+                     (map cdr definitions))
+         ,@(letrec-body exp)))))
