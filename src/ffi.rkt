@@ -86,6 +86,12 @@
              (loop input (cons '(gt) tokens)))
             ((char=? c #\u3a) ;; :
              (loop input (cons '(col) tokens)))
+            ((char=? c #\[)
+             (loop input (cons '(lbc) tokens)))
+            ((char=? c #\])
+             (loop input (cons '(rbc) tokens)))
+            ((char=? c #\,)
+             (loop input (cons '(com) tokens)))
             ((char-numeric? c)
              (loop input (cons `(num ,(scan-number input c)) tokens)))
             ((char=? c #\") ;; double quote
@@ -102,6 +108,28 @@
             ((char=? c #\F) ;; literal false
              (loop input (cons '(bool #f) tokens)))))))
 
+(define (parse-bindings tokens)
+  (match tokens
+    [(list-rest '(lbc) (list 'num n1) '(com) (list 'num n2) '(col) rest)
+     (cdr (foldl (lambda (i tokens)
+                   (match tokens
+                     [(list-rest '(lpar) (list 'num n) '(col) rest)
+                      (let-values ([(ignore tokens)
+                                    (parse-typedval n rest)])
+                        tokens)]))
+                 rest
+                 (range 0 (+ (- n2 n1) 1))))]))
+
+(define (parse-environment tokens)
+  (match tokens
+    [(list-rest '(st) '(lpar) (list 'num 1) '(col) '(nil) '(rpar) rest)
+     (let ((tokens (parse-bindings rest)))
+       (cdr tokens))]
+    [(list-rest '(st) '(lpar) (list 'num 0) '(col) rest)
+     (let ((tokens (parse-environment rest)))
+       (cdr (parse-bindings (cdr tokens))))]
+    [_ (error "Incorrect input -- parse-environment")]))
+
 (define (parse-typedval type tokens)
   (case type
     [(0) ;; null
@@ -114,7 +142,8 @@
        [(list-rest (list 'num n) '(rpar) rest)
         (values n rest)]
        [_ (error "Incorrect input -- parse int")])]
-    [(2) null]
+    [(2)
+     (error "2 is unknown")]
     [(3) ;; string
      (match tokens
        [(list-rest (list 'string s) '(rpar) rest)
@@ -136,8 +165,18 @@
                (values (cons car cdr) (cddr tokens)))]
             [_ (display tokens)(error "Incorrect input -- parse cons 1")]))]
        [_ (error "Incorrect input -- parse cons 2")])]
-    [(6) null]
-    [(7) null]))
+    [(6) ;; closure
+     (match tokens
+       [(list-rest '(st) (list num n1) (list num n2) (list num n3) rest)
+        (let ((tokens (parse-environment rest)))
+          ;; Due to technical reasons, we will just return the keyword #:closure
+          ;; instead of an actual usable closure... We will also parse the whole
+          ;; environment just to drop it off the token stream. The FIBRE format
+          ;; has its limitations... TODO: alternative output via C?
+          (values '#:procedure (cddr tokens)))]
+       [_ (error "Incorrect input -- parse closure")])]
+    [(7)
+     (error "7 is unknown")]))
 
 (define (parse tokens)
   (match tokens
