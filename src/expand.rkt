@@ -20,7 +20,9 @@
 	     (symbol? exp))
 	 exp)
         ((begin? exp)
-         (expand (expand-begin exp)))
+         (expand (transform-definitions (cdr exp))))
+        ((definition? exp)
+         (error "Definitions only allowed inside begin expressions -- expand"))
 	((let? exp)
 	 (let* ((defs (let-definitions exp))
 		(vars (map car defs))
@@ -28,7 +30,7 @@
 		(body (let-body exp)))
 	   `((lambda
                  ,vars
-	       ,@(map expand body))
+ 	       ,@(map expand body))
 	     ,@(map expand args))))
         ((letrec? exp)
          (expand (expand-letrec exp)))
@@ -38,8 +40,6 @@
 	 (expand (expand-and exp)))
 	((if? exp)
 	 (expand-if exp))
-        ;;((definition? exp)
-        ;; (expand-definition exp))
         ((quote? exp)
          exp)
 	((application? exp)
@@ -57,6 +57,27 @@
                (map expand exp))))
 	(else (error (~a "Incorrect expression -- expand\n\t\""
 			 exp "\"")))))
+
+;; Tracks down the define's in a sequence and puts them
+;; in a letrec expression.
+(define (transform-definitions sequence)
+  (let ((expressions
+         (foldl (lambda (exp exps)
+                  (if (definition? exp)
+                      (cons (cons (if (list? (definition-variable exp))
+                                      `(,(car (definition-variable exp))
+                                        (lambda ,(cdr (definition-variable exp))
+                                          ,@(definition-value exp)))
+                                      `(,(definition-variable exp)
+                                        (begin ,@(definition-value exp))))
+                                  (car exps))
+                            (cdr exps))
+                      (cons (car exps)
+                            (cons exp (cdr exps)))))
+                (cons '() '())
+                sequence)))
+    `(letrec ,(car expressions)
+       ,@(cdr expressions))))
 
 (define (expand-begin exp)
   `((lambda () ,@(begin-expressions exp))))
