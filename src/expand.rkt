@@ -19,6 +19,8 @@
   (cond ((or (self-evaluating? exp)
 	     (symbol? exp))
 	 exp)
+        ((begin? exp)
+         (expand (expand-begin exp)))
 	((let? exp)
 	 (let* ((defs (let-definitions exp))
 		(vars (map car defs))
@@ -36,8 +38,8 @@
 	 (expand (expand-and exp)))
 	((if? exp)
 	 (expand-if exp))
-        ((definition? exp)
-         (expand-definition exp))
+        ;;((definition? exp)
+        ;; (expand-definition exp))
         ((quote? exp)
          exp)
 	((application? exp)
@@ -55,6 +57,9 @@
                (map expand exp))))
 	(else (error (~a "Incorrect expression -- expand\n\t\""
 			 exp "\"")))))
+
+(define (expand-begin exp)
+  `((lambda () ,@(begin-expressions exp))))
 
 (define (reduce op args num-args neutral)
   (let loop ((res '())

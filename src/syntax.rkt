@@ -9,12 +9,20 @@
 	 lexical-address? frame offset
          definition? definition-variable definition-value
          quote? quote-value
-         letrec? letrec-definitions letrec-body)
+         letrec? letrec-definitions letrec-body
+         begin? begin-expressions)
 
 ;;;; Auxiliary
 (define (tagged-list? tag list)
   (and (list? list)
        (eq? (car list) tag)))
+
+;;;; Begin
+(define (begin? exp)
+  (tagged-list? 'begin exp))
+
+(define (begin-expressions exp)
+  (cdr exp))
 
 ;;;; Self-evaluating
 (define (self-evaluating? exp)

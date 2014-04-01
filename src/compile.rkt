@@ -6,7 +6,8 @@
 	 "generate.rkt"
 	 "translate.rkt")
 
-(provide compile-skive-to-if1
+(provide compile-sequence-to-if1
+         compile-skive-to-if1
 	 compile-if1-to-native)
 
 ;; TODO: make config file for this
@@ -16,6 +17,9 @@
 (define sisal-lib-path "/usr/local/lib/sisal")
 (define sisal-include-path "/usr/local/include/sisal")
 (define graphviz-dot-path "/usr/local/bin/dot")
+
+(define (compile-sequence-to-if1 sequence)
+  (compile-skive-to-if1 `(begin ,@sequence)))
 
 ;; TODO: add output path variable
 (define (compile-skive-to-if1 expression)

@@ -12,7 +12,7 @@
   (syntax-rules ()
     [(define-skive (name) . body)
      (define name
-       (let* ((code (compile-skive-to-if1 (car (quote body))))
+       (let* ((code (compile-sequence-to-if1 (quote body)))
 	      (lib (compile-if1-to-native code #:type 'lib)))
 	 (make-thunk lib)))]))
 
