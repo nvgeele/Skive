@@ -29,13 +29,12 @@
 	 (translated (translate generated)))
     translated))
 
-;; TODO: add output path variable
-(define (compile-if1-to-native code #:type [type 'exe])
+(define (compile-if1-to-native code #:type [type 'exe] #:path [path #f])
   (let* ((code-prefix (path->string (make-temporary-file "skiveif1~a" #f "/tmp")))
 	 (code-file (string-append code-prefix ".if1"))
 	 (csrc-file (string-append code-prefix ".c"))
 	 (cobj-file (string-append code-prefix ".o"))
-	 (out-file (string-append code-prefix
+	 (out-file (string-append (if path path code-prefix)
 				  (case type
 				    [(exe) ""]
 				    [(lib) ".dylib"]
