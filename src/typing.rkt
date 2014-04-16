@@ -6,17 +6,21 @@
          typedval-null-idx typedval-int-idx
          typedval-float-idx typedval-string-idx
          typedval-bool-idx typedval-cons-idx
-         typedval-func-idx typedval-type-count
+         typedval-func-idx typedval-quot-idx
+         typedval-vect-idx typedval-type-count
          conscell-lbl conscell-car-idx conscell-cdr-idx
          frame-lbl frame-prev-idx frame-bind-idx
          back-lbl back-null-idx back-frame-idx
          closure-lbl
          closure-func-idx closure-args-idx closure-framesize-idx closure-env-idx
+         vector-lbl vector-size-idx vector-content-idx
          function-lbl
          call-function-lbl
          is-false-nat-func-lbl
          main-function-lbl
          generate-type-definitions-code)
+
+;; This file looks as if it escaped from a coding horror movie
 
 (define bool-lbl   1)
 (define char-lbl   2)
@@ -66,7 +70,9 @@
 (define single-typedval-tuple-lbl (+ single-frame-tuple-lbl 1))
 (define function-lbl              (+ single-typedval-tuple-lbl 1))
 
-(define integer-frame-tuple-lbl   (+ function-lbl 1))
+(define typedval-typedval-function-lbl (+ 1 function-lbl))
+
+(define integer-frame-tuple-lbl   (+ typedval-typedval-function-lbl 1))
 (define call-function-lbl         (+ integer-frame-tuple-lbl 1))
 
 (define single-bool-tuple-lbl     (+ call-function-lbl 1))
@@ -142,8 +148,9 @@
    (make-record-definition vector-lbl int-lbl typedval-array-lbl)
    (make-tuple-definition single-frame-tuple-lbl frame-lbl)
    (make-tuple-definition single-typedval-tuple-lbl typedval-lbl)
-   (extend-tuple-definition integer-frame-tuple-lbl single-frame-tuple-lbl int-lbl)
    (make-function-definition function-lbl single-frame-tuple-lbl single-typedval-tuple-lbl)
+   (make-function-definition typedval-typedval-function-lbl single-typedval-tuple-lbl single-typedval-tuple-lbl)
+   (extend-tuple-definition integer-frame-tuple-lbl single-frame-tuple-lbl int-lbl)
    (make-function-definition call-function-lbl integer-frame-tuple-lbl single-typedval-tuple-lbl)
    (make-tuple-definition single-bool-tuple-lbl bool-lbl)
    (make-function-definition is-false-nat-func-lbl single-typedval-tuple-lbl single-bool-tuple-lbl)
