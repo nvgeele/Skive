@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../src/ffi.rkt")
+(require "../../src/ffi.rkt")
 
 (define tokens
   '((lpar)

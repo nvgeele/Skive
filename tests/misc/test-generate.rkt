@@ -1,9 +1,9 @@
 #lang racket
 
-(require "../src/expand.rkt")
-(require "../src/analyse.rkt")
-(require "../src/generate.rkt")
-(require "../src/program.rkt")
+(require "../../src/expand.rkt")
+(require "../../src/analyse.rkt")
+(require "../../src/generate.rkt")
+(require "../../src/program.rkt")
 
 (define prog1 '((lambda (a) a) 1))
 

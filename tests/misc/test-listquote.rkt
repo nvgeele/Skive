@@ -1,9 +1,9 @@
 #lang racket
 
-(require "../src/expand.rkt")
-(require "../src/analyse.rkt")
-(require "../src/compile.rkt")
-(require "../src/skive.rkt")
+(require "../../src/expand.rkt")
+(require "../../src/analyse.rkt")
+(require "../../src/compile.rkt")
+(require "../../src/skive.rkt")
 
 (define prog
   ;;'(cons 1 (cons 2 (cons 3 '())))

@@ -1,11 +1,11 @@
 #lang racket
 
-(require "../src/expand.rkt")
-(require "../src/analyse.rkt")
-(require "../src/generate.rkt")
-(require "../src/program.rkt")
-(require "../src/translate.rkt")
-(require "../src/graph-boundary.rkt")
+(require "../../src/expand.rkt")
+(require "../../src/analyse.rkt")
+(require "../../src/generate.rkt")
+(require "../../src/program.rkt")
+(require "../../src/translate.rkt")
+(require "../../src/graph-boundary.rkt")
 
 ;; Works
 (define prog1 '1)
