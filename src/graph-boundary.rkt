@@ -1,9 +1,12 @@
 #!racket
 
 (require "edge.rkt"
-	 "node.rkt")
+	 "node.rkt"
+         "typing.rkt") ;; For default type
 
 (provide make-graph-boundary
+         graph-boundary-name
+         graph-boundary-type
 	 add-node add-edge
 	 graph-boundary?
 	 for-each-node
@@ -13,16 +16,16 @@
 	 foldl-edges-to
 	 graph-boundary->dot-file
 	 label-counter
-	 graph-boundary-name
 	 topological-sort
 	 graph-node
-	 set-boundary-name)
+	 set-boundary-name
+         graph-boundary-type)
 
-(struct graph-boundary (;type
-			name
+(struct graph-boundary (name
 			label-counter
 			nodes edges
-			global)
+			global
+                        type)
 	#:transparent)
 
 (define name graph-boundary-name)
@@ -30,10 +33,8 @@
 (define nodes graph-boundary-nodes)
 (define edges graph-boundary-edges)
 
-(define (make-graph-boundary ;type
-         name [global #f])
-  (graph-boundary ;type
-   name 1 (hash) '() global))
+(define (make-graph-boundary name [global #f] [type function-lbl])
+  (graph-boundary name 1 (hash) '() global type))
 
 (define (add-node gb node)
   (values

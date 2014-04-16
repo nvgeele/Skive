@@ -29,10 +29,10 @@
      (make-call-function program)
      (make-main-function program))))
 
-(define (translate-boundary boundary [function-lbl function-lbl] [name #t])
+(define (translate-boundary boundary [function-lbl #f] [name #t])
   (let ((sorted (filter (lambda (i) (not (= i 0)))
 			(topological-sort boundary))))
-    (~a "G " function-lbl
+    (~a "G " (if function-lbl function-lbl (graph-boundary-type boundary))
 	(if name
             (~a "\t\"" (graph-boundary-name boundary) "\"\n")
             "\n")
