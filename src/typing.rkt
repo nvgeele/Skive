@@ -34,39 +34,45 @@
 (define typedval-bool-idx   5)
 (define typedval-cons-idx   6)
 (define typedval-func-idx   7)
-(define typedval-type-count 7)
+(define typedval-quot-idx   8)
+(define typedval-vect-idx   9)
+(define typedval-type-count 9)
 
-(define conscell-lbl    18)
+(define conscell-lbl     (+ typedval-lbl typedval-type-count 1))
 (define conscell-car-idx 1)
 (define conscell-cdr-idx 2)
 
-(define closure-lbl          21)
+(define closure-lbl           (+ conscell-lbl 3))
 (define closure-func-idx      1)
 (define closure-args-idx      2)
 (define closure-framesize-idx 3)
 (define closure-env-idx       4)
 
-(define typedval-array-lbl 26)
+(define typedval-array-lbl (+ closure-lbl 5))
 
-(define frame-lbl 27)
+(define frame-lbl      (+ typedval-array-lbl 1))
 (define frame-prev-idx 1)
 (define frame-bind-idx 2)
 
-(define back-lbl      30)
+(define back-lbl       (+ frame-lbl 3))
 (define back-null-idx  2)
 (define back-frame-idx 1)
 
-(define single-frame-tuple-lbl    33)
-(define single-typedval-tuple-lbl 34)
-(define function-lbl              35)
+(define vector-lbl         (+ back-lbl 3))
+(define vector-size-idx    1)
+(define vector-content-idx 2)
 
-(define integer-frame-tuple-lbl   36)
-(define call-function-lbl         37)
+(define single-frame-tuple-lbl    (+ vector-lbl 3))
+(define single-typedval-tuple-lbl (+ single-frame-tuple-lbl 1))
+(define function-lbl              (+ single-typedval-tuple-lbl 1))
 
-(define single-bool-tuple-lbl     38)
-(define is-false-nat-func-lbl     39)
+(define integer-frame-tuple-lbl   (+ function-lbl 1))
+(define call-function-lbl         (+ integer-frame-tuple-lbl 1))
 
-(define main-function-lbl         40)
+(define single-bool-tuple-lbl     (+ call-function-lbl 1))
+(define is-false-nat-func-lbl     (+ single-bool-tuple-lbl 1))
+
+(define main-function-lbl         (+ is-false-nat-func-lbl 1))
 
 (define (make-basic-type-definition label basic-type)
   (format "T ~s 1 ~s\n" label basic-type))
@@ -124,7 +130,8 @@
                           null-lbl int-lbl
                           float-lbl string-lbl
                           bool-lbl conscell-lbl
-                          closure-lbl)
+                          closure-lbl int-lbl ;; Symbols are represented as ints
+                          vector-lbl)
 
    (make-record-definition conscell-lbl typedval-lbl typedval-lbl)
 
@@ -132,6 +139,7 @@
    (make-array-definition typedval-array-lbl typedval-lbl)
    (make-record-definition frame-lbl back-lbl typedval-array-lbl)
    (make-union-definition back-lbl frame-lbl null-lbl)
+   (make-record-definition vector-lbl int-lbl typedval-array-lbl)
    (make-tuple-definition single-frame-tuple-lbl frame-lbl)
    (make-tuple-definition single-typedval-tuple-lbl typedval-lbl)
    (extend-tuple-definition integer-frame-tuple-lbl single-frame-tuple-lbl int-lbl)
