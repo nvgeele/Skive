@@ -17,7 +17,7 @@
                        (add-edge 0 1 lbl1 1 bool-lbl)
                        (add-edge lbl1 1 0 1 bool-lbl))]
        [(false-bnd) (make-graph-boundary "")]
-       [(false-bnd lit) (add-node false-boundary (make-literal-node "false"))]
+       [(false-bnd lit) (add-node false-bnd (make-literal-node "false"))]
        [(false-bnd) (add-edge false-bnd lit 1 0 1 bool-lbl)])
     (make-tagcase `(,bool-bnd ,false-bnd)
                   #(1 1 1 1 0 1 1 1 1))))

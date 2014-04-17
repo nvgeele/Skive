@@ -20,9 +20,9 @@
        [(false-boundary lbl1) (add-node false-boundary (make-simple-node 139))]
        [(false-boundary lbl2) (add-node false-boundary (make-simple-node 143))]
        [(false-boundary) (~> false-boundary
-                             (add-node 0 1 lbl1 1 bool-lbl)
-                             (add-node lbl1 1 lbl2 typedval-bool-idx bool-lbl)
-                             (add-node lbl2 1 0 1 typedval-lbl))]
+                             (add-edge 0 1 lbl1 1 bool-lbl)
+                             (add-edge lbl1 1 lbl2 typedval-bool-idx bool-lbl)
+                             (add-edge lbl2 1 0 1 typedval-lbl))]
        [(compound-node) (make-tagcase `(,false-boundary ,true-boundary)
                                       #(1 1 1 1 0 1 1 1 1))])
     (let*-values ([(boundary) (make-graph-boundary "is_false" #f function-lbl)]
