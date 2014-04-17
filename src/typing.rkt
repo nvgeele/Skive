@@ -14,7 +14,7 @@
          closure-lbl
          closure-func-idx closure-args-idx closure-framesize-idx closure-env-idx
          vector-lbl vector-size-idx vector-content-idx
-         function-lbl
+         function-lbl typedval-typedval-function-lbl
          call-function-lbl
          is-false-nat-func-lbl
          main-function-lbl
