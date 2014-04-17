@@ -2,39 +2,35 @@
 
 (require "typing.rkt")
 
-(provide generate-runtime-code)
+(provide get-runtime-boundaries)
 
 (define runtime-list
-  `(;;is_num
-    ;;is_int
-    ;;is_float
-    ;;is_null
-    ;;is_string
-    ;;is_bool
-    ;;is_cons
-    ;;is_false
-    ;;is_symbol
-    ;;is_list
-    get_car
-    get_cdr
-    rt-cons
-    plus
-    minus
-    multiply
+  '(cons
     divide
     equal
-    is_false_nat))
+    get_car
+    get_cdr
+    is_bool
+    is_cons
+    is_false
+    is_false_nat
+    is_float
+    is_int
+    is_list
+    is_list_intern
+    is_null
+    is_num
+    is_string
+    is_symbol
+    is_vector
+    minus
+    multiply
+    plus))
 
-(define (generate-runtime-code)
-  (let-values
-      ([(path ignore ignore2) (split-path (current-contract-region))])
-    (foldl
-     (lambda (proc str)
-       (string-append
-        str
-        (file->string (string-append
-                       (path->string path)
-                       "if1/"
-                       (symbol->string proc) ".if1"))))
-     ""
-     runtime-list)))
+(define (get-runtime-boundaries)
+  (let*-values
+      ([(path ignore ignore2) (split-path (current-contract-region))]
+       [(path) (string-append (path->string path) "runtime/")])
+    (parameterize ([current-load-relative-directory path])
+      (for/list ([func runtime-list])
+        (eval `(dynamic-require ,(~a func ".rkt") ',func))))))

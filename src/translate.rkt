@@ -19,13 +19,13 @@
     (string-append
      (generate-type-definitions-code) "\n"
      stamps "\n"
-     (generate-runtime-code) "\n"
      (foldl (lambda (boundary code)
               (string-append code
                              (translate-boundary boundary)
                              "\n"))
             ""
-            boundaries)
+            (append (get-runtime-boundaries)
+                    boundaries))
      (make-call-function program)
      (make-main-function program))))
 
