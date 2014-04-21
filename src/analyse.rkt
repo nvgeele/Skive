@@ -28,9 +28,10 @@
              `(lambda ,(lambda-args exp)
                 ,@(analyse (lambda-body exp) env))))
           ((application? exp)
-           `(,(if (eq? (appl-op exp) 'list)
-                  'list
-                  (analyse (appl-op exp) env))
+           `(,(case (appl-op exp)
+                [(list) 'list]
+                [(vector) 'vector]
+                [else (analyse (appl-op exp) env)])
              ,@(map (lambda (arg)
                       (analyse arg env))
                     (appl-args exp))))

@@ -172,8 +172,40 @@
               (values program gb tval-bld)
               (loop (car rem) (cdr rem) gb program tval-bld)))))))
 
+(define (generate-vector program graph-boundary vector)
+  (let ((vector (reverse vector))
+        (size (length vector)))
+    (let loop ((cur (car vector))
+               (rem (cdr vector))
+               (gb graph-boundary)
+               (program program)
+               (labels '()))
+      (let-values ([(program gb lbl) (generate* cur gb program)])
+        (if (null? rem)
+            (let*-values
+                ([(gb abuild) (add-node gb (make-simple-node 103))] ;; ABuild
+                 [(gb lit1) (add-node gb (make-literal-node 0))]
+                 [(gb vbuild) (add-node gb (make-simple-node 143))] ;; RBuild
+                 [(gb lit2) (add-node gb (make-literal-node size))]
+                 [(gb tvbuild) (add-node gb (make-simple-node 143))] ;; RBuild
+                 [(gb) (~> (foldl (lambda (label port gb)
+                                    (add-edge gb label 1 abuild port typedval-lbl))
+                                  gb
+                                  (cons lbl labels)
+                                  (range 2 (+ 2 size)))
+                           (add-edge lit1 1 abuild 1 int-lbl)
+                           (add-edge lit2 1 vbuild vector-size-idx int-lbl)
+                           (add-edge abuild 1 vbuild vector-content-idx typedval-array-lbl)
+                           (add-edge vbuild 1 tvbuild typedval-vect-idx vector-lbl))])
+              (values program gb tvbuild))
+            (loop (car rem) (cdr rem) gb program (cons lbl labels)))))))
+
 (define (generate-application exp graph-boundary program)
   (cond
+   ((eq? (appl-op exp) 'vector)
+    (let-values ([(program gb lbl)
+                  (generate-vector program graph-boundary (cdr exp))])
+      (values program gb lbl)))
    ((eq? (appl-op exp) 'list)
     (let-values ([(program gb lbl)
                   (generate-list program graph-boundary (cdr exp))])
