@@ -15,7 +15,9 @@
       (fac o))))
 
 (define-skive (test)
-  (vector 1 2 3 4))
+  (list (vector 1 2 3 4)
+        "Amazing!"
+        (vector 5 6 7 8)))
 
 (define a-program
   '((vector 1 2 3 4)))

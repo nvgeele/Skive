@@ -176,14 +176,36 @@
           (values '#:procedure (cddr tokens)))]
        [_ (error "Incorrect input -- parse closure")])]
     [(7)
-     (error "7 is unknown")]))
+     (error "7 is unknown")]
+    [(8) ;; Vector
+     (match tokens
+       [(list-rest '(st) (list num size) '(lbc) _ '(com) _ '(col) rest)
+        (let loop ((i size)
+                   (vals '())
+                   (tokens rest))
+          (if (= i 0)
+              (values (list->vector (reverse vals)) (cdddr tokens))
+              (let-values ([(val tokens) (parse* tokens)])
+                (loop (- i 1) (cons val vals) tokens))))]
+       [_ (error "Incorrect input -- parse vector")])]))
+
+;; TODO: update reader to make use of parse* everywhere
+(define (parse* tokens)
+  (match tokens
+    [(list-rest '(lpar) (list 'num n) '(col) rest)
+     (parse-typedval n rest)]
+    [_ (error "Incorrect input -- parse")]))
 
 (define (parse tokens)
-  (match tokens
-    [(list-rest '(lpar) (list 'num n) '(col)  rest)
-     (let-values ([(value ignore) (parse-typedval n rest)])
-       value)]
-    [_ (error "Incorrect input -- parse")]))
+  (let-values ([(value ignore) (parse* tokens)])
+    value))
+
+#;(define (parse tokens)
+(match tokens
+  [(list-rest '(lpar) (list 'num n) '(col) rest)
+   (let-values ([(value ignore) (parse-typedval n rest)])
+     value)]
+  [_ (error "Incorrect input -- parse")]))
 
 (define (parse-fibre-input str)
   (parse (scan-fibre str)))
