@@ -200,6 +200,7 @@
               (values program gb tvbuild))
             (loop (car rem) (cdr rem) gb program (cons lbl labels)))))))
 
+;; TODO: check if correct amount of arguments are given (by transforming to apply?)
 (define (generate-application exp graph-boundary program)
   (cond
    ((eq? (appl-op exp) 'vector)

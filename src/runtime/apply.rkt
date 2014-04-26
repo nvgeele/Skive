@@ -45,38 +45,29 @@
                  (add-edge 0 2 call-node 2 int-lbl)
                  (add-edge lit-node 1 call-node 1 call-function-lbl)
                  (add-edge call-node 1 0 1 typedval-lbl))])
-    (make-select `(,sb ,cb ,error-boundary)
-                 #(0 1 2))))
+    (make-select `(,sb ,error-boundary ,cb)
+                 #(0 2 1))))
 
 ;; 0 - 1 : The vector typedval
 ;; 0 - 2 : The procedure typedval
 (define compound-node-vector
   (let*-values
       ([(vb) (make-graph-boundary "")] ;; vb = vector-boundary
-       [(vb tv1-elements) (add-node vb (make-simple-node 144))]
        [(vb vect-elements) (add-node vb (make-simple-node 144))]
-       [(vb tv2-elements) (add-node vb (make-simple-node 144))]
        [(vb closure-elements) (add-node vb (make-simple-node 144))]
        [(vb equal) (add-node vb (make-simple-node 124))]
        [(vb int) (add-node vb (make-simple-node 129))]
        [(vb call) (add-node vb compound-node-call)]
        [(vb) (~> vb
-                 (add-edge 0 1 tv1-elements 1 typedval-lbl)
-                 (add-edge tv1-elements typedval-vect-idx vect-elements 1 vector-lbl)
-
-                 (add-edge 0 2 tv2-elements 1 typedval-lbl)
-                 (add-edge tv2-elements typedval-func-idx closure-elements 1 closure-lbl)
-
+                 (add-edge 0 1 vect-elements 1 vector-lbl)
+                 (add-edge 0 2 closure-elements 1 closure-lbl)
                  (add-edge vect-elements vector-size-idx equal 1 int-lbl)
                  (add-edge closure-elements closure-args-idx equal 2 int-lbl)
-
                  (add-edge equal 1 int 1 int-lbl)
                  (add-edge int 1 call 1 int-lbl)
-
                  (add-edge closure-elements closure-func-idx call 2 int-lbl)
                  (add-edge closure-elements closure-env-idx call 3 frame-lbl)
                  (add-edge vect-elements vector-content-idx call 4 typedval-array-lbl)
-
                  (add-edge call 1 0 1 typedval-lbl))])
     (make-tagcase `(,vb ,error-boundary)
                   #(1 1 1 1 1 1 1 1 0))))
@@ -86,7 +77,7 @@
       ([(closure-boundary) (make-graph-boundary "")]
        [(closure-boundary lbl1) (add-node closure-boundary compound-node-vector)]
        [(closure-boundary) (~> closure-boundary
-                               (add-edge 0 1 lbl1 2 typedval-lbl)
+                               (add-edge 0 1 lbl1 2 closure-lbl)
                                (add-edge 0 2 lbl1 1 typedval-lbl)
                                (add-edge lbl1 1 0 1 typedval-lbl))])
     (make-tagcase `(,closure-boundary ,error-boundary)
