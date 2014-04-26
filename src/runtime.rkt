@@ -25,7 +25,8 @@
     is_vector
     minus
     multiply
-    plus))
+    plus
+    apply))
 
 (define (get-runtime-boundaries)
   (let*-values

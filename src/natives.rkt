@@ -22,7 +22,8 @@
 	'cons (native "cons" 2 #f '())
 	'car (native "get_car" 1 #f '())
 	'cdr (native "get_cdr" 1 #f '())
-        'list? (native "is_list" 2 #f '())))
+        'list? (native "is_list" 2 #f '())
+        'apply (native "apply" 2 #f '())))
 
 ;; Some steps in the compilation process need a list of natives.
 ;; Hash-map makes a list but does this in undefined order! Since
