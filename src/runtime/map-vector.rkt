@@ -33,6 +33,7 @@
       ([(generator) (make-graph-boundary "")]
        [(generator scatter) (add-node generator (make-simple-node 114))]
        [(generator) (~> generator
+                        (add-edge 0 1 scatter 1 typedval-array-lbl)
                         (add-edge scatter 1 0 4 multiple-typedval-lbl)
                         (add-edge scatter 2 0 5 multiple-int-lbl))]
        [(body) (make-graph-boundary "")]
@@ -51,11 +52,16 @@
                    (add-edge frame-build 1 call 3 frame-lbl)
                    (add-edge call 1 0 6 typedval-lbl))]
        [(results) (make-graph-boundary "")]
-       [(results first-val) (add-node results (make-simple-node 126))]
+       ;; NOTE: we do not need the FirstValue node, apparently,
+       ;; it isn't even implemented yet...
+       ;; So, we apparently need to do the thing with the literal node.
+       ;; [(results first-val) (add-node results (make-simple-node 126))]
+       [(results lit) (add-node results (make-literal-node 0))]
        [(results gather) (add-node results (make-simple-node 107))]
        [(results) (~> results
-                      (add-edge 0 5 first-val 1 multiple-int-lbl)
-                      (add-edge first-val 1 gather 1 int-lbl)
+                      ;;(add-edge 0 5 first-val 1 multiple-int-lbl)
+                      ;;(add-edge first-val 1 gather 1 int-lbl)
+                      (add-edge lit 1 gather 1 int-lbl)
                       (add-edge 0 6 gather 2 multiple-typedval-lbl)
                       (add-edge gather 1 0 1 typedval-array-lbl))])
     (make-for generator body results)))
