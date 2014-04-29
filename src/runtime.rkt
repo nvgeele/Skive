@@ -26,7 +26,9 @@
     minus
     multiply
     plus
-    apply))
+    apply
+    map-vector
+    ))
 
 (define (get-runtime-boundaries)
   (let*-values

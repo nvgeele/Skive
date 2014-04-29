@@ -18,7 +18,9 @@
          call-function-lbl
          is-false-nat-func-lbl
          main-function-lbl
-         generate-type-definitions-code)
+         generate-type-definitions-code
+         multiple-int-lbl
+         multiple-typedval-lbl)
 
 ;; This file looks as if it escaped from a coding horror movie
 
@@ -80,8 +82,14 @@
 
 (define main-function-lbl         (+ is-false-nat-func-lbl 1))
 
+(define multiple-int-lbl      (+ main-function-lbl 1))
+(define multiple-typedval-lbl (+ multiple-int-lbl 1))
+
 (define (make-basic-type-definition label basic-type)
   (format "T ~s 1 ~s\n" label basic-type))
+
+(define (make-multiple-type-definition label base-type)
+  (format "T ~s 4 ~s\n" label base-type))
 
 (define (make-array-definition label type)
   (format "T ~s 0 ~s\n" label type))
@@ -154,4 +162,6 @@
    (make-function-definition call-function-lbl integer-frame-tuple-lbl single-typedval-tuple-lbl)
    (make-tuple-definition single-bool-tuple-lbl bool-lbl)
    (make-function-definition is-false-nat-func-lbl single-typedval-tuple-lbl single-bool-tuple-lbl)
-   (make-function-definition main-function-lbl 0 single-typedval-tuple-lbl)))
+   (make-function-definition main-function-lbl 0 single-typedval-tuple-lbl)
+   (make-multiple-type-definition multiple-int-lbl int-lbl)
+   (make-multiple-type-definition multiple-typedval-lbl typedval-lbl)))
