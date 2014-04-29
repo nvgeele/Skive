@@ -215,7 +215,7 @@
 	       [(in out) (make-cpipe)])
     (let ((ParseCommandLine
            (get-ffi-obj "ParseCommandLine" s-lib
-                        (_fun _int (_ptr i _string) -> _void)))
+                        (_fun _int _pointer -> _void)))
 	  (InitSisalRunTime
            (get-ffi-obj "InitSisalRunTime" s-lib
                         (_fun -> _void)))
@@ -239,25 +239,33 @@
                         (_fun -> _void)))
 	  (in-fs (fdopen in "r"))
 	  (out-fs (fdopen out "w")))
-      ;; Let's make this pipe non-blocking
-      ;; http://stackoverflow.com/questions/1735781/non-blocking-pipe-using-popen
-      ;; Alternative: using select(), but more work
-      (let ((d (fileno in-fs)))
-	;; fcntl(d, F_SETFL, O_NONBLOCK);
-	(fcntl d F_SETFL O_NONBLOCK))
-      (set-ffi-obj! "FibreOutFd" s-lib
-		    _file_ptr out-fs)
-      (ParseCommandLine 0 "null")
-      (InitSisalRunTime)
-      (set-ffi-obj! "SisalMainArgs" s-lib
-		    _pointer (ReadFibreInputs))
-      (lambda ()
-	(StartWorkers)
-	(SisalMain (get-ffi-obj "SisalMainArgs" s-lib _pointer))
-	(StopWorkers)
-	(WriteFibreOutputs (get-ffi-obj "SisalMainArgs" s-lib _pointer))
-	(fflush out-fs)
-        ;;(read-fibre (read-from-fs in-fs))
-	(let ((str (read-from-fs in-fs)))
-          ;;(make-fibre-scanner str))
-	  (parse-fibre-input str))))))
+      (let* ((t (_array _string 2))
+             (x (malloc t))
+             (a (ptr-ref x t 0)))
+        (array-set! a 0 "-gss")
+        ;; Set parallelism to 4 workers
+        ;; TODO: maybe put it in a config file
+        (array-set! a 1 "-w4")
+
+        ;; Let's make this pipe non-blocking
+        ;; http://stackoverflow.com/questions/1735781/non-blocking-pipe-using-popen
+        ;; Alternative: using select(), but more work
+        (let ((d (fileno in-fs)))
+          ;; fcntl(d, F_SETFL, O_NONBLOCK);
+          (fcntl d F_SETFL O_NONBLOCK))
+        (set-ffi-obj! "FibreOutFd" s-lib
+                      _file_ptr out-fs)
+        (ParseCommandLine 2 x)
+        (InitSisalRunTime)
+        (set-ffi-obj! "SisalMainArgs" s-lib
+                      _pointer (ReadFibreInputs))
+        (lambda ()
+          (StartWorkers)
+          (SisalMain (get-ffi-obj "SisalMainArgs" s-lib _pointer))
+          (StopWorkers)
+          (WriteFibreOutputs (get-ffi-obj "SisalMainArgs" s-lib _pointer))
+          (fflush out-fs)
+          ;;(read-fibre (read-from-fs in-fs))
+          (let ((str (read-from-fs in-fs)))
+            ;;(make-fibre-scanner str))
+            (parse-fibre-input str)))))))
