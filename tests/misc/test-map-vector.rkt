@@ -39,6 +39,6 @@
             (fib* (lambda (n)
                     (fib-iter n 0 1)))
             (vec (vector ,@(range 1 301))))
-     (map-vector fib* vec)))
+     (map-vector fib vec)))
 
 (define test (lambda-skive prog))
