@@ -213,7 +213,15 @@
       (values program gb lbl)))
    ((eq? (appl-op exp) 'quote)
     (cond ((symbol? (quote-value exp))
-           (error "We don't have symbols yet -- generate"))
+           (let*-values ([(program symbol)
+                          (program-intern-symbol program (quote-value exp))]
+                         [(gb build1)
+                          (add-node graph-boundary (make-simple-node 143))]
+                         [(gb lit1)
+                          (add-node gb (make-literal-node symbol))]
+                         [(gb)
+                          (add-edge gb lit1 1 build1 typedval-quot-idx int-lbl)])
+             (values program gb build1)))
           ((null? (quote-value exp))
            (let-values ([(gb lbl)
                          (generate-self-evaluating graph-boundary null)])
