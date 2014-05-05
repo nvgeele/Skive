@@ -1,6 +1,7 @@
 #!racket
 
 (provide self-evaluating?
+         quoted-symbol? quoted-symbol
 	 application? appl-op appl-args
 	 let? let-definitions let-body
 	 lambda? lambda-args lambda-body
@@ -32,7 +33,15 @@
       (boolean? exp)
       (null? exp)
       (eq? exp #t)
-      (false? exp)))
+      (false? exp)
+      (quoted-symbol? exp)))
+
+(define (quoted-symbol? exp)
+  (and (tagged-list? 'quote exp)
+       (symbol? (cadr exp))))
+
+(define (quoted-symbol exp)
+  (cadr exp))
 
 ;;;; Application
 (define (application? exp)

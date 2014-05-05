@@ -44,7 +44,7 @@
 						 (vector-ref exp 1))])
 	   (values program gb res)))
 	((self-evaluating? exp)
-	 (let-values ([(gb  res) (generate-self-evaluating graph-boundary exp)])
+	 (let-values ([(program gb  res) (generate-self-evaluating program graph-boundary exp)])
 	   (values program gb res)))
 	((lambda? exp)
 	 (generate-lambda exp graph-boundary program))
@@ -82,25 +82,50 @@
                     (add-edge frm-elm frame-prev-idx tagcase 1 back-lbl))
                 tagcase)))))
 
-(define (generate-self-evaluating graph-boundary exp)
-  (let*-values ([(type-lbl type-idx exp) (cond ((integer? exp) (values int-lbl
-                                                                       typedval-int-idx
-                                                                       exp))
-                                               ((string? exp) (values string-lbl
-                                                                      typedval-string-idx
-                                                                      exp))
-                                               ((null? exp) (values null-lbl
-                                                                    typedval-null-idx
-                                                                    exp))
-                                               ((or (false? exp) (eq? exp #t))
-                                                (values bool-lbl typedval-bool-idx (if (false? exp) "F" "T")))
-                                               (else (error "Unknown self-evaluating value -- generate")))]
-                [(lit-node build-node) (values (make-literal-node exp)
-					       (make-simple-node 143))]
-		[(gb blbl) (add-node graph-boundary build-node)]
-		[(gb llbl) (add-node gb lit-node)]
-		[(gb) (add-edge gb llbl 1 blbl type-idx type-lbl)])
-    (values gb blbl)))
+(define (generate-self-evaluating program graph-boundary exp)
+  (let*-values ([(program type-lbl type-idx exp)
+                 (cond ((integer? exp) (values program
+                                               int-lbl
+                                               typedval-int-idx
+                                               exp))
+                       ((string? exp) (values program
+                                              string-lbl
+                                              typedval-string-idx
+                                              exp))
+                       ((null? exp) (values program
+                                            null-lbl
+                                            typedval-null-idx
+                                            exp))
+                       ((or (false? exp) (eq? exp #t))
+                        (values program
+                                bool-lbl
+                                typedval-bool-idx
+                                (if (false? exp) "F" "T")))
+                       ((quoted-symbol? exp)
+                        (let-values ([(program interned)
+                                      (program-intern-symbol program (quoted-symbol exp))])
+                          (values program
+                                  int-lbl
+                                  typedval-quot-idx
+                                  interned)))
+                       ((symbol? exp)
+                        (let-values ([(program interned)
+                                      (program-intern-symbol program exp)])
+                          (values program
+                                  int-lbl
+                                  typedval-quot-idx
+                                  interned)))
+                       (else (error "Unknown self-evaluating value -- generate")))]
+                [(lit-node build-node)
+                 (values (make-literal-node exp)
+                         (make-simple-node 143))]
+		[(gb blbl)
+                 (add-node graph-boundary build-node)]
+		[(gb llbl)
+                 (add-node gb lit-node)]
+		[(gb)
+                 (add-edge gb llbl 1 blbl type-idx type-lbl)])
+    (values program gb blbl)))
 
 (define (generate-lambda exp graph-boundary program)
   (let*-values ([(boundary) (make-graph-boundary "temp")]
@@ -135,14 +160,15 @@
               (values program gb (reverse (cons res lst)))
               (loop (car rem) (cdr rem) (cons res lst) gb program))))))
 
-(define (generate-quoted-list graph-boundary list)
+(define (generate-quoted-list program graph-boundary list)
   (let ((list (reverse list)))
-    (let-values ([(gb nlbl) (generate-self-evaluating graph-boundary null)])
+    (let-values ([(program gb nlbl) (generate-self-evaluating program graph-boundary null)])
       (let loop ((cur (car list))
                  (rem (cdr list))
+                 (program program)
                  (gb gb)
                  (prev nlbl))
-        (let*-values ([(gb res) (generate-self-evaluating gb cur)]
+        (let*-values ([(program gb res) (generate-self-evaluating program gb cur)]
                       [(gb cons-bld) (add-node gb (make-simple-node 143))]
                       [(gb tval-bld) (add-node gb (make-simple-node 143))]
                       [(gb) (~> gb
@@ -150,12 +176,12 @@
                                 (add-edge res 1 cons-bld 1 typedval-lbl)
                                 (add-edge cons-bld 1 tval-bld typedval-cons-idx conscell-lbl))])
           (if (null? rem)
-              (values gb tval-bld)
-              (loop (car rem) (cdr rem) gb tval-bld)))))))
+              (values program gb tval-bld)
+              (loop (car rem) (cdr rem) program gb tval-bld)))))))
 
 (define (generate-list program graph-boundary list)
   (let ((list (reverse list)))
-    (let-values ([(gb nlbl) (generate-self-evaluating graph-boundary null)])
+    (let-values ([(program gb nlbl) (generate-self-evaluating program graph-boundary null)])
       (let loop ((cur (car list))
                  (rem (cdr list))
                  (gb gb)
@@ -212,23 +238,13 @@
                   (generate-list program graph-boundary (cdr exp))])
       (values program gb lbl)))
    ((eq? (appl-op exp) 'quote)
-    (cond ((symbol? (quote-value exp))
-           (let*-values ([(program symbol)
-                          (program-intern-symbol program (quote-value exp))]
-                         [(gb build1)
-                          (add-node graph-boundary (make-simple-node 143))]
-                         [(gb lit1)
-                          (add-node gb (make-literal-node symbol))]
-                         [(gb)
-                          (add-edge gb lit1 1 build1 typedval-quot-idx int-lbl)])
-             (values program gb build1)))
-          ((null? (quote-value exp))
-           (let-values ([(gb lbl)
-                         (generate-self-evaluating graph-boundary null)])
+    (cond ((null? (quote-value exp))
+           (let-values ([(program gb lbl)
+                         (generate-self-evaluating program graph-boundary null)])
              (values program gb lbl)))
           (else
-           (let-values ([(gb lbl)
-                         (generate-quoted-list graph-boundary (cadr exp))])
+           (let-values ([(program gb lbl)
+                         (generate-quoted-list program graph-boundary (cadr exp))])
              (values program gb lbl)))))
    (else
     (let*-values ([(gb-call) (make-graph-boundary "")]
