@@ -67,6 +67,7 @@
                       (add-edge bnd-lit 1 bnd-elm 2 int-lbl)
                       (add-edge frm-elm frame-bind-idx bnd-elm 1 typedval-array-lbl))
                   bnd-elm))
+        ;; TODO: Why the checking? We don't need this; compiler be always right yo.
         (let*-values ([(gb-fail) (make-graph-boundary "")]
                       [(gb-fail lit-err) (add-node gb-fail (make-literal-node "error"))]
                       [(gb-fail) (add-edge gb-fail lit-err 1 0 1 frame-lbl)]
@@ -278,7 +279,7 @@
                   [(gb-fail err-lit) (add-node gb-fail (make-literal-node "error"))]
                   [(gb-fail) (add-edge gb-fail err-lit 1 0 1 typedval-lbl)]
                   ;; TODO: make sure vector gets generated automatically!
-                  [(cn) (make-tagcase `(,gb-fail ,gb-call ,gb-fail) #(0 0 0 0 0 0 1))]
+                  [(cn) (make-tagcase `(,gb-fail ,gb-call) #(0 0 0 0 0 0 1 0 0))]
                   [(gb cn) (add-node gb cn)]
                   [(gb) (car (foldl (lambda (node c)
                                       (cons (add-edge (car c) node 1 cn (cdr c) typedval-lbl)

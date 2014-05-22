@@ -28,6 +28,8 @@
     plus
     apply
     map-vector
+    vector-ref
+    vector-length
     ))
 
 (define (get-runtime-boundaries)
