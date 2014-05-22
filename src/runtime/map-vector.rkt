@@ -8,17 +8,6 @@
 
 (provide map-vector)
 
-;; How apply works:
-;; Apply receives two typedval's as argument, one must be a closure,
-;; the other must be a vector. If both types are correct, apply will
-;; check that the vector's length is equal to the amount of
-;; arguments needed by the closure. If they are equal, the procedure
-;; integer will be extracted from the closure, the vector will be
-;; turned into a frame, and the call procedure will be called. If
-;; they are not equal, or an argument has an incorrect type, an error
-;; value will be generated.
-;; No resizeing of the vector's array is needed.
-
 (define error-boundary
   (let*-values
       ([(boundary) (make-graph-boundary "")]
@@ -37,14 +26,17 @@
                         (add-edge scatter 1 0 4 multiple-typedval-lbl)
                         (add-edge scatter 2 0 5 multiple-int-lbl))]
        [(body) (make-graph-boundary "")]
+       [(body tvbld) (add-node body (make-simple-node 143))]
        [(body lit1) (add-node body (make-literal-node 0))]
        [(body array-build) (add-node body (make-simple-node 103))]
        [(body frame-build) (add-node body (make-simple-node 143))]
        [(body lit2) (add-node body (make-literal-node "call"))]
        [(body call) (add-node body (make-simple-node 120))]
        [(body) (~> body
+                   (add-edge 0 5 tvbld typedval-int-idx int-lbl)
                    (add-edge lit1 1 array-build 1 int-lbl)
-                   (add-edge 0 4 array-build 2 typedval-lbl)
+                   (add-edge tvbld 1 array-build 2 typedval-lbl)
+                   (add-edge 0 4 array-build 3 typedval-lbl)
                    (add-edge 0 3 frame-build frame-prev-idx back-lbl)
                    (add-edge array-build 1 frame-build frame-bind-idx typedval-array-lbl)
                    (add-edge lit2 1 call 1 call-function-lbl)
