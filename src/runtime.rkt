@@ -10,19 +10,19 @@
     equal
     get_car
     get_cdr
-    is_bool
-    is_cons
-    is_false
+    ;;is_bool
+    ;;is_cons
+    ;;is_false
     is_false_nat
-    is_float
-    is_int
+    ;;is_float
+    ;;is_int
     is_list
     is_list_intern
-    is_null
-    is_num
-    is_string
-    is_symbol
-    is_vector
+    ;;is_null
+    ;;is_num
+    ;;is_string
+    ;;is_symbol
+    ;;is_vector
     minus
     multiply
     plus
