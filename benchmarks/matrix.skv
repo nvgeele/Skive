@@ -1,0 +1,38 @@
+(begin
+  (define (matrix-column m c)
+    (map-vector (lambda (i r)
+                  (vector-ref r c))
+                m))
+
+  (define (sum-scalar v1 v2)
+    (letrec ((iter
+              (lambda (i s v c)
+                (if (= i s)
+                    c
+                    (iter (+ 1 i)
+                          s
+                          v
+                          (+ c (vector-ref v i)))))))
+      (iter 0
+            (vector-length v1)
+            (map-vector (lambda (i ignore)
+                          (* (vector-ref v1 i)
+                             (vector-ref v2 i)))
+                        (make-vector (vector-length v1) 0))
+            0)))
+
+  (define (mat-mult m1 m2)
+    (let ((new (make-vector (vector-length m1)
+                            (make-vector (vector-length (vector-ref m2 0)) 0))))
+      (map-vector
+       (lambda (ir row)
+         (map-vector (lambda (ik ignore)
+                       (let ((column (matrix-column m2 ik))
+                             (row (vector-ref m1 ir)))
+                         (sum-scalar column row)))
+                     row))
+       new)))
+
+  (let ((v1 (make-vector 100 (make-vector 100 0)))
+        (v2 (make-vector 100 (make-vector 100 0))))
+    (vector-ref (vector-ref (mat-mult v1 v2) 0) 0)))
