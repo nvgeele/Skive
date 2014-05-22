@@ -72,9 +72,9 @@
       (let* ((t (_array _string 2))
              (x (malloc t))
              (a (ptr-ref x t 0)))
-        (array-set! a 0 "-gss")
         ;; Set parallelism to 4 workers
         ;; TODO: maybe put it in a config file
+        (array-set! a 0 "-gss")
         (array-set! a 1 "-w4")
 
         ;; Let's make this pipe non-blocking

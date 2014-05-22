@@ -16,8 +16,6 @@
           ((or (self-evaluating? exp)
                (quote? exp))
            exp)
-          ;;((definition? exp)
-          ;; (if ))
           ((if? exp)
            `(if ,(analyse (if-condition exp) env)
                 ,(analyse (if-consequent exp) env)
