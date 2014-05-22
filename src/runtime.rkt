@@ -30,6 +30,8 @@
     map-vector
     vector-ref
     vector-length
+    make-vector
+    error
     ))
 
 (define (get-runtime-boundaries)
