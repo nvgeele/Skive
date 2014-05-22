@@ -19,6 +19,8 @@
   (cond ((or (self-evaluating? exp)
 	     (symbol? exp))
 	 exp)
+        ((vector? exp)
+         (expand `(vector ,@(vector->list exp))))
         ((begin? exp)
          (expand (transform-definitions (cdr exp))))
         ((definition? exp)
