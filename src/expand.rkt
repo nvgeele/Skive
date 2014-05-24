@@ -79,7 +79,7 @@
                 (cons '() '())
                 sequence)))
     `(letrec ,(car expressions)
-       ,@(cdr expressions))))
+       ,@(reverse (cdr expressions)))))
 
 (define (expand-begin exp)
   `((lambda () ,@(begin-expressions exp))))
