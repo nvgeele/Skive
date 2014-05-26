@@ -70,7 +70,7 @@
   (let* ((table (program-symbol-table prog))
          (interned (hash-ref (symbol-table-table table) symbol #f)))
     (if interned
-        (values program interned)
+        (values prog interned)
         (let ((interned (symbol-table-count table)))
           (values
            (struct-copy program prog
