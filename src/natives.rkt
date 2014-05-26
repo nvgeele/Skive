@@ -26,9 +26,11 @@
         'apply (native "apply" 2 #f '())
         'map-vector (native "map_vector" 2 #f '())
         'vector-ref (native "vector_ref" 2 #f '())
+        'vector-set (native "vector_set" 3 #f '())
         'vector-length (native "vector_length" 1 #f '())
         'make-vector (native "make_vector" 2 #f '())
-        'error (native "throw_error" 0 #f '())))
+        'error (native "throw_error" 0 #f '())
+        'null? (native "is_null" 1 #f '())))
 
 ;; Some steps in the compilation process need a list of natives.
 ;; Hash-map makes a list but does this in undefined order! Since

@@ -17,9 +17,11 @@
          "runtime/apply.rkt"
          "runtime/map-vector.rkt"
          "runtime/vector-ref.rkt"
+         "runtime/vector-set.rkt"
          "runtime/vector-length.rkt"
          "runtime/make-vector.rkt"
-         "runtime/error.rkt")
+         "runtime/error.rkt"
+         "runtime/is_null.rkt")
 
 (provide get-runtime-boundaries)
 
@@ -37,7 +39,7 @@
         ;;is_int
         is_list
         is_list_intern
-        ;;is_null
+        is_null
         ;;is_num
         ;;is_string
         ;;is_symbol
@@ -48,6 +50,7 @@
         apply
         map-vector
         vector-ref
+        vector-set
         vector-length
         make-vector
         error
