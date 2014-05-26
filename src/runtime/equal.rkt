@@ -69,6 +69,19 @@
     (make-tagcase `(,int-boundary ,false-boundary)
                   #(1 1 1 1 0 1 1 1 1))))
 
+(define symbol-compound-node
+  (let*-values
+      ([(symb-bnd) (make-graph-boundary "")]
+       [(symb-bnd lbl1) (add-node symb-bnd (make-simple-node 124))]
+       [(symb-bnd lbl2) (add-node symb-bnd (make-simple-node 143))]
+       [(symb-bnd) (~> symb-bnd
+                       (add-edge 0 2 lbl1 1 int-lbl)
+                       (add-edge 0 1 lbl1 2 int-lbl)
+                       (add-edge lbl1 1 lbl2 typedval-bool-idx bool-lbl)
+                       (add-edge lbl2 1 0 1 typedval-lbl))])
+    (make-tagcase `(,symb-bnd ,false-boundary)
+                  #(1 1 1 1 1 1 1 0 1))))
+
 (define compound-node
   (let*-values
       ([(null-bnd) (make-graph-boundary "")]
@@ -93,9 +106,20 @@
        [(bool-bnd) (~> bool-bnd
                        (add-edge 0 2 lbl 1 typedval-lbl)
                        (add-edge 0 1 lbl 2 bool-lbl)
+                       (add-edge lbl 1 0 1 typedval-lbl))]
+       [(symb-bnd) (make-graph-boundary "")]
+       [(symb-bnd lbl) (add-node symb-bnd symbol-compound-node)]
+       [(symb-bnd) (~> symb-bnd
+                       (add-edge 0 2 lbl 1 typedval-lbl)
+                       (add-edge 0 1 lbl 2 int-lbl)
                        (add-edge lbl 1 0 1 typedval-lbl))])
-    (make-tagcase `(,null-bnd ,int-bnd ,float-bnd ,bool-bnd ,false-boundary)
-                  #(0 1 2 4 3 4 4 4 4))))
+    (make-tagcase `(,null-bnd
+                    ,int-bnd
+                    ,float-bnd
+                    ,bool-bnd
+                    ,false-boundary
+                    ,symb-bnd)
+                  #(0 1 2 4 3 4 4 5 4))))
 
 (define equal
   (let*-values
