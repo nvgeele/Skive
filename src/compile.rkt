@@ -30,15 +30,17 @@
     translated))
 
 (define (compile-if1-to-native code #:type [type 'exe] #:path [path #f])
-  (let* ((code-prefix (path->string (make-temporary-file "skiveif1~a" #f "/tmp")))
+  (let* ((code-prefix (path->string
+                       (make-temporary-file "skiveif1~a" #f "/tmp")))
 	 (code-file (string-append code-prefix ".if1"))
 	 (csrc-file (string-append code-prefix ".c"))
 	 (cobj-file (string-append code-prefix ".o"))
-	 (out-file (string-append (if path path code-prefix)
-				  (case type
-				    [(exe) ""]
-				    [(lib) ".dylib"]
-				    [else (error "Incorrect output type -- compile-native")])))
+	 (out-file (string-append
+                    (if path path code-prefix)
+                    (case type
+                      [(exe) ""]
+                      [(lib) ".dylib"]
+                      [else (error "Incorrect output type -- compile-native")])))
 	 (out (open-output-file code-file #:exists 'truncate)))
     (display code out)
     (close-output-port out)
@@ -57,18 +59,23 @@
             (subprocess-wait sp)
             (close-output-port in)(close-input-port out)(close-input-port err)
             (if (file-exists? cobj-file)
-                (let-values ([(sp out in err) (subprocess #f #f #f
-                                                          gcc-path
-                                                          "-o" out-file
-                                                          runtime-object-path
-                                                          cobj-file
-                                                          (if (eq? type 'lib)
-                                                              "-shared" "")
-                                                          (~a "-L" sisal-lib-path)
-                                                          "-lsisal" "-lm")])
+                (let-values ([(sp out in err)
+                              (subprocess #f #f #f
+                                          gcc-path
+                                          "-o" out-file
+                                          runtime-object-path
+                                          cobj-file
+                                          (if (eq? type 'lib)
+                                              "-shared" "")
+                                          (~a "-L" sisal-lib-path)
+                                          "-lsisal" "-lm")])
                   (subprocess-wait sp)
-                  (close-output-port in)(close-input-port out)(close-input-port err)
-                  (delete-file code-file)(delete-file csrc-file)(delete-file cobj-file)
+                  (close-output-port in)
+                  (close-input-port out)
+                  (close-input-port err)
+                  (delete-file code-file)
+                  (delete-file csrc-file)
+                  (delete-file cobj-file)
                   (unless (eq? type 'exe) (delete-file code-prefix))
                   (if (file-exists? out-file)
                       out-file

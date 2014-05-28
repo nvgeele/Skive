@@ -4,7 +4,11 @@
 	 "ffi.rkt")
 
 (provide define-skive
-         lambda-skive)
+         lambda-skive
+         load-skive-from-file
+         ;; provide compile functions too
+         compile-skive-to-if1
+         compile-if1-to-native)
 
 ;; TODO: compile sequence
 
@@ -20,3 +24,7 @@
   (let* ((code (compile-skive-to-if1 source))
          (lib (compile-if1-to-native code #:type 'lib)))
     (make-thunk lib)))
+
+(define (load-skive-from-file source)
+  (let ((skive-code `(begin ,@(file->list source))))
+    (lambda-skive skive-code)))
