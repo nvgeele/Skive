@@ -54,6 +54,8 @@
              (loop input (cons '(rbc) tokens)))
             ((char=? c #\,)
              (loop input (cons '(com) tokens)))
+            ((char=? c #\-)
+             (loop input (cons `(num ,(- (scan-number input #\0))) tokens)))
             ((char-numeric? c)
              (loop input (cons `(num ,(scan-number input c)) tokens)))
             ((char=? c #\") ;; double quote
