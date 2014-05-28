@@ -31,7 +31,7 @@
 
 (define (compile-if1-to-native code #:type [type 'exe] #:path [path #f])
   (let* ((code-prefix (path->string
-                       (make-temporary-file "skiveif1~a" #f "/tmp")))
+                       (make-temporary-file "skiveif1~a" #f)))
 	 (code-file (string-append code-prefix ".if1"))
 	 (csrc-file (string-append code-prefix ".c"))
 	 (cobj-file (string-append code-prefix ".o"))
