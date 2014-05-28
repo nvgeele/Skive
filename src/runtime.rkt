@@ -8,6 +8,7 @@
          "runtime/equal.rkt"
          "runtime/get_car.rkt"
          "runtime/get_cdr.rkt"
+         "runtime/is_false.rkt"
          "runtime/is_false_nat.rkt"
          "runtime/is_list.rkt"
          "runtime/is_list_intern.rkt"
@@ -33,7 +34,7 @@
         get_cdr
         ;;is_bool
         ;;is_cons
-        ;;is_false
+        is_false
         is_false_nat
         ;;is_float
         ;;is_int
@@ -54,6 +55,7 @@
         vector-length
         make-vector
         error
+        not
         ))
 
 (define (get-runtime-boundaries)

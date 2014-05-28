@@ -28,7 +28,9 @@
         'vector-length (native "vector_length" 1)
         'make-vector (native "make_vector" 2)
         'error (native "throw_error" 0)
-        'null? (native "is_null" 1)))
+        'null? (native "is_null" 1)
+        'false? (native "is_false" 1)
+        'not (native "is_false" 1)))
 
 ;; Some steps in the compilation process need a list of natives.
 ;; Hash-map makes a list but does this in undefined order! Since
