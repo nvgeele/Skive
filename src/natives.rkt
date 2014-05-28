@@ -7,30 +7,28 @@
 (provide natives
 	 natives-list
 	 native-name
-	 native-inputs
-	 native-reducible?
-	 native-neutral)
+	 native-inputs)
 
-(struct native (name inputs reducible? neutral))
+(struct native (name inputs))
 
 (define natives
-  (hash '+ (native "plus" 2 #t 0)
-	'- (native "minus" 2 #t 0)
-	'* (native "multiply" 2 #t 1)
-	'/ (native "divide" 2 #f 1)
-	'=   (native "equal" 2 #f '())
-	'cons (native "cons" 2 #f '())
-	'car (native "get_car" 1 #f '())
-	'cdr (native "get_cdr" 1 #f '())
-        'list? (native "is_list" 2 #f '())
-        'apply (native "apply" 2 #f '())
-        'map-vector (native "map_vector" 2 #f '())
-        'vector-ref (native "vector_ref" 2 #f '())
-        'vector-set (native "vector_set" 3 #f '())
-        'vector-length (native "vector_length" 1 #f '())
-        'make-vector (native "make_vector" 2 #f '())
-        'error (native "throw_error" 0 #f '())
-        'null? (native "is_null" 1 #f '())))
+  (hash '+ (native "plus" 2)
+	'- (native "minus" 2)
+	'* (native "multiply" 2)
+	'/ (native "divide" 2)
+	'=   (native "equal" 2)
+	'cons (native "cons" 2)
+	'car (native "get_car" 1)
+	'cdr (native "get_cdr" 1)
+        'list? (native "is_list" 2)
+        'apply (native "apply" 2)
+        'map-vector (native "map_vector" 2)
+        'vector-ref (native "vector_ref" 2)
+        'vector-set (native "vector_set" 3)
+        'vector-length (native "vector_length" 1)
+        'make-vector (native "make_vector" 2)
+        'error (native "throw_error" 0)
+        'null? (native "is_null" 1)))
 
 ;; Some steps in the compilation process need a list of natives.
 ;; Hash-map makes a list but does this in undefined order! Since

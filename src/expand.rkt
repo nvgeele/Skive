@@ -5,16 +5,6 @@
 
 (provide expand)
 
-;; car := arguments needed
-;; cdr := neutral element
-(define reducible
-  (foldl (lambda (native hash)
-	   (if (native-reducible? (cdr native))
-               (hash-set hash (car native) (cdr native))
-               hash))
-	 (hash)
-	 (hash->list natives)))
-
 (define (expand exp)
   (cond ((or (self-evaluating? exp)
 	     (symbol? exp))
@@ -45,18 +35,7 @@
         ((quote? exp)
          exp)
 	((application? exp)
-	 (let ((red (hash-ref reducible (appl-op exp) #f))
-	       (len (length (appl-args exp))))
-	   (if red
-               (cond ((= len (native-inputs red))
-                      `(,(appl-op exp) ,@(map expand (appl-args exp))))
-                     ((< len (native-inputs red))
-                      (error "Not enough arguments -- expand"))
-                     ((> len (native-inputs red))
-                      (expand
-                       (reduce (appl-op exp) (appl-args exp)
-                               (native-inputs red) (native-neutral red)))))
-               (map expand exp))))
+         (map expand exp))
 	(else (error (~a "Incorrect expression -- expand\n\t\""
 			 exp "\"")))))
 
@@ -83,39 +62,6 @@
 
 (define (expand-begin exp)
   `((lambda () ,@(begin-expressions exp))))
-
-(define (reduce op args num-args neutral)
-  (let loop ((res '())
-	     (rest args)
-	     (i 0))
-    (let ((len (length rest)))
-      (cond ((> len num-args)
-	     (loop
-              (cons `(,(string->symbol (~a "let_" i))
-                      (,op ,@(take rest num-args))) ;,@(map expand (take rest num-args))))
-                    res)
-              (list-tail rest num-args)
-              (+ i 1)))
-	    ((= len num-args)
-	     `(let ,(cons `(,(string->symbol (~a "let_" i))
-                            (,op ,@(take rest num-args))) ;,@(map expand (take rest num-args))))
-			  res)
-		,(reduce* `(,op ,@(map (lambda (i)
-					 (string->symbol (~a "let_" i)))
-				       (range 0 (+ i 1))))
-			  num-args neutral)))
-	    (else ;(< len num-args)
-             (if (null? res)
-                 `(,op ,@(append rest ;(map expand rest)
-                                 (make-list (- num-args len) neutral)))
-                 `(let ,(cons `(,(string->symbol (~a "let_" i))
-				(,op ,@(append rest ;(map expand rest)
-					       (make-list (- num-args len) neutral))))
-                              res)
-                    ,(reduce* `(,op ,@(map (lambda (i)
-                                             (string->symbol (~a "let_" i)))
-                                           (range 0 (+ i 1))))
-                              num-args neutral))))))))
 
 (define (reduce* exp num-args neutral)
   (let ((op (car exp))
