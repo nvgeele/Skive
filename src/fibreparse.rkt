@@ -11,13 +11,26 @@
 	    ((char-whitespace? char) (loop res))
 	    (else (loop (cons char res)))))))
 
+;; TODO: Can't this be written a bit, well, better?
+;; TODO: Actually, can't the whole parser be written better (library)?
 (define (scan-number input c)
   (let loop ((chars `(,c)))
     (let ((c (peek-char input)))
-      (if (char-numeric? c)
-          (loop (cons (read-char input) chars))
-          ;; TODO: Can't this be written a bit, well, better?
-          (string->number (list->string (reverse chars)))))))
+      (cond ((char-numeric? c)
+             (loop (cons (read-char input) chars)))
+            ((char=? c #\.)
+             (loop (cons (read-char input) chars)))
+            ((char=? c #\e)
+             (let* ((sign (begin (read-char input)
+                                 (if (char=? (read-char input) #\-)
+                                     -
+                                     +)))
+                    (exp (list (read-char input)
+                               (read-char input))))
+               (* (string->number (list->string (reverse chars)))
+                  (expt 10 (sign (string->number (list->string exp)))))))
+            (else
+             (string->number (list->string (reverse chars))))))))
 
 (define (scan-string input)
   (let loop ((chars '()))
@@ -101,13 +114,11 @@
        [(list-rest '(nil) '(rpar) rest)
         (values null rest)]
        [_ (error "Incorrect input -- parse null")])]
-    [(1) ;; integer
+    [(1 2) ;; integer / real
      (match tokens
        [(list-rest (list 'num n) '(rpar) rest)
         (values n rest)]
        [_ (error "Incorrect input -- parse int")])]
-    [(2)
-     (error "2 is unknown")]
     [(3) ;; string
      (match tokens
        [(list-rest (list 'string s) '(rpar) rest)

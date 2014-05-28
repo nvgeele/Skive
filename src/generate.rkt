@@ -89,6 +89,10 @@
                                                int-lbl
                                                typedval-int-idx
                                                exp))
+                       ((real? exp) (values program
+                                            float-lbl
+                                            typedval-float-idx
+                                            exp))
                        ((string? exp) (values program
                                               string-lbl
                                               typedval-string-idx

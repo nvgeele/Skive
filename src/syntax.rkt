@@ -28,6 +28,7 @@
 ;;;; Self-evaluating
 (define (self-evaluating? exp)
   (or (integer? exp)
+      (real? exp)
       (string? exp)
       ;;(symbol? exp)
       (boolean? exp)
