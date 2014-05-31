@@ -1,6 +1,7 @@
-(define (factorial n)
-  (if (= n 0)
-      1
-      (* n (factorial (- n 1)))))
+(begin
+  (define (factorial n)
+    (if (= n 0)
+        1
+        (* n (factorial (- n 1)))))
 
-(factorial 25)
+  (factorial 25))

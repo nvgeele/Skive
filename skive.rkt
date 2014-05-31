@@ -24,8 +24,9 @@
         (loop (append res `(,cur))
               (read input)))))
 
+;; TODO: use file->list instead of read-all
 (define (compile input output-file)
-  (let* ((skive-code (read-all input))
+  (let* ((skive-code (last (read-all input)))
          (if1-code (compile-sequence-to-if1 skive-code)))
     (if (if1-mode)
         (call-with-output-file (if output-file output-file "if1.out")

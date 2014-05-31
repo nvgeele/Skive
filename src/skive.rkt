@@ -26,5 +26,5 @@
     (make-thunk lib)))
 
 (define (load-skive-from-file source)
-  (let ((skive-code `(begin ,@(file->list source))))
+  (let ((skive-code (last (file->list source))))
     (lambda-skive skive-code)))

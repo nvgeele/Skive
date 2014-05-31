@@ -55,7 +55,6 @@
         vector-length
         make-vector
         error
-        not
         ))
 
 (define (get-runtime-boundaries)
