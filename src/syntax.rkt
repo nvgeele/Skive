@@ -3,7 +3,7 @@
 (provide self-evaluating?
          quoted-symbol? quoted-symbol
 	 application? appl-op appl-args
-	 let? let-definitions let-body
+	 let? let*? let-definitions let-body
 	 lambda? lambda-args lambda-body
 	 if? if-condition if-consequent if-alternative
 	 or? and?
@@ -57,6 +57,9 @@
 ;;;; Let expressions
 (define (let? exp)
   (tagged-list? 'let exp))
+
+(define (let*? exp)
+  (tagged-list? 'let* exp))
 
 (define (let-definitions exp)
   (cadr exp))

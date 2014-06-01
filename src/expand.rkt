@@ -24,6 +24,16 @@
                  ,vars
  	       ,@(map expand body))
 	     ,@(map expand args))))
+        ((let*? exp)
+         (let ((defs (reverse (let-definitions exp)))
+               (body (let-body exp)))
+           (expand
+            (car
+             (foldl (lambda (def exp)
+                      `((let (,def)
+                          ,@exp)))
+                    body
+                    defs)))))
         ((letrec? exp)
          (expand (expand-letrec exp)))
 	((or? exp)
