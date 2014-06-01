@@ -13,3 +13,11 @@ More details are available in the
 
 Code and results of benchmarks are also
 [available](http://skive.nvgeele.be/benchmarks.tgz).
+
+# Directory Structure
+* **src** contains the source files of the compiler and Racket
+  integration layer
+* **tests** contains all tests
+* **examples** contains some Skive and Racket integration examples
+* **benchmarks** contains Skive and SISAL code use for benchmarks, as
+  well as the benchmark results

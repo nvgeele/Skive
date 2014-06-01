@@ -1,0 +1,11 @@
+(begin
+  (define (fib n)
+    (letrec ((iter
+              (lambda (a b c)
+                (if (= c 0)
+                    b
+                    (iter (+ a b) a (- c 1))))))
+      (iter 1 0 n)))
+
+  (let ((v (make-vector 2000 1000)))
+    (vector-ref (map-vector fib v) 2)))

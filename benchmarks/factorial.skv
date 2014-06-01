@@ -1,8 +1,0 @@
-(begin
-  (define (factorial n)
-    (if (= n 0)
-        1
-        (* n (factorial (- n 1)))))
-
-  (let ((v1 (make-vector 1000 50)))
-    (map-vector factorial v1)))
