@@ -4,19 +4,12 @@
 	 "expand.rkt"
 	 "analyse.rkt"
 	 "generate.rkt"
-	 "translate.rkt")
+	 "translate.rkt"
+         "config.rkt")
 
 (provide compile-sequence-to-if1
          compile-skive-to-if1
 	 compile-if1-to-native)
-
-;; TODO: make config file for this
-(define sisal-compiler-path "/usr/local/bin/sisalc")
-(define gcc-path "/usr/bin/gcc")
-(define runtime-object-path "/usr/local/lib/sisal/srt0.o")
-(define sisal-lib-path "/usr/local/lib/sisal")
-(define sisal-include-path "/usr/local/include/sisal")
-(define graphviz-dot-path "/usr/local/bin/dot")
 
 (define (compile-sequence-to-if1 sequence)
   (compile-skive-to-if1 `(begin ,@sequence)))

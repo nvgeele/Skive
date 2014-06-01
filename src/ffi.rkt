@@ -3,15 +3,12 @@
 (require ffi/unsafe
 	 ffi/unsafe/define
          "fibreparse.rkt"
-	 "typing.rkt")
+	 "typing.rkt"
+         "config.rkt")
 
 (provide make-thunk)
 
-;;;; Depends on OS/architecture(?)
-(define O_NONBLOCK 4)
-(define F_SETFL    4)
-
-(define-ffi-definer define-cl (ffi-lib #f))
+(define-ffi-definer define-cl (ffi-lib CLIB))
 (define _file_ptr (_cpointer _file))
 
 (define-cl fdopen (_fun _int _string -> _file_ptr))
@@ -72,10 +69,8 @@
       (let* ((t (_array _string 2))
              (x (malloc t))
              (a (ptr-ref x t 0)))
-        ;; Set parallelism to 4 workers
-        ;; TODO: maybe put it in a config file
         (array-set! a 0 "-gss")
-        (array-set! a 1 "-w4")
+        (array-set! a 1 (~a "-w" num-workers))
 
         ;; Let's make this pipe non-blocking
         ;; http://stackoverflow.com/questions/1735781/non-blocking-pipe-using-popen
