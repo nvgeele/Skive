@@ -12,7 +12,7 @@ on the implementation, benchmarks, installation instructions, and
 so forth can be found in the
 [final thesis](http://skive.nvgeele.be/thesis.pdf).
 
-# Directory Structure
+## Directory Structure
 * **src** contains the source files of the compiler and Racket
   integration layer
 * **tests** contains all tests
@@ -20,7 +20,7 @@ so forth can be found in the
 * **benchmarks** contains Skive and SISAL code use for benchmarks, as
   well as the benchmark results and accompanying Mathenatica notebook
 
-# Downloads
+## Downloads
 The latest version of the SISAL compiler and runtime are available
 on the [SISAL site](http://sisal.sourceforge.net/). The version
 used for development is 14.1, is mirrored
