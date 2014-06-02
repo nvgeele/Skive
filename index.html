@@ -1,34 +1,37 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
+    <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Skive by nvgeele</title>
-
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+    <title>Skive by nvgeele</title>
   </head>
+
   <body>
-    <div class="wrapper">
-      <header>
-        <h1>Skive</h1>
-        <p>A parallel, single assignment Scheme</p>
+    <div id="container">
+      <div class="inner">
 
-        <p class="view"><a href="https://github.com/nvgeele/Skive">View the Project on GitHub <small>nvgeele/Skive</small></a></p>
+        <header>
+          <h1>Skive</h1>
+          <h2>A parallel, single assignment Scheme</h2>
+        </header>
 
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/nvgeele/Skive/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/nvgeele/Skive/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/nvgeele/Skive" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
 
-        <ul>
-          <li><a href="https://github.com/nvgeele/Skive/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/nvgeele/Skive/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/nvgeele/Skive">View On <strong>GitHub</strong></a></li>
-        </ul>
-      </header>
-      <section>
-        <h1>
+        <hr>
+
+        <section id="main_content">
+          <h1>
 <a name="skive" class="anchor" href="#skive"><span class="octicon octicon-link"></span></a>Skive</h1>
 
 <p>Skive is a parallel, compiled Scheme dialect with single assignment
@@ -38,19 +41,51 @@ semantics, implemented in <a href="http://racket-lang.org/">Racket</a> on the
 <p>The language was designed and implemented for the final bachelor's
 project of Nils Van Geele at the Vrije Universiteit Brussel.</p>
 
-<p>More details are available in the
-<a href="http://skive.nvgeele.be/litstudy.pdf">literature study</a> or in the
+<p>Details on the rationale behind the language can be found in the
+<a href="http://skive.nvgeele.be/litstudy.pdf">literature study</a>. Details
+on the implementation, benchmarks, installation instructions, and
+so forth can be found in the
 <a href="http://skive.nvgeele.be/thesis.pdf">final thesis</a>.</p>
 
-<p>Code and results of benchmarks are also
-<a href="http://skive.nvgeele.be/benchmarks.tgz">available</a>.</p>
-      </section>
-      <footer>
-        <p>This project is maintained by <a href="https://github.com/nvgeele">nvgeele</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
-      </footer>
+<h2>
+<a name="directory-structure" class="anchor" href="#directory-structure"><span class="octicon octicon-link"></span></a>Directory Structure</h2>
+
+<ul>
+<li>
+<strong>src</strong> contains the source files of the compiler and Racket
+integration layer</li>
+<li>
+<strong>tests</strong> contains all tests</li>
+<li>
+<strong>examples</strong> contains some Skive and Racket integration examples</li>
+<li>
+<strong>benchmarks</strong> contains Skive and SISAL code use for benchmarks, as
+well as the benchmark results and accompanying Mathenatica notebook</li>
+</ul><h2>
+<a name="downloads" class="anchor" href="#downloads"><span class="octicon octicon-link"></span></a>Downloads</h2>
+
+<p>The latest version of the SISAL compiler and runtime are available
+on the <a href="http://sisal.sourceforge.net/">SISAL site</a>. The version
+used for development is 14.1, is mirrored
+<a href="http://skive.nvgeele.be/sisal-14.1.0.tgz">here</a>.</p>
+
+<p>Version 13 of the Optimizing SISAL Compiler, including many SISAL
+code examples, the SISAL reference manual, and other documents
+are also available <a href="http://skive.nvgeele.be/osc-13.0.4.tgz">here</a>.</p>
+
+<p>The "IF1: An Intermediate Form for Applicative Languages." paper by
+Skedzielewski and Glauert, containing valuable information on IF1,
+is made available <a href="http://skive.nvgeele.be/if1.pdf">here</a>. Other
+documents on SISAL are freely available on the internet.</p>
+        </section>
+
+        <footer>
+          Skive is maintained by <a href="https://github.com/nvgeele">nvgeele</a><br>
+          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
     </div>
-    <script src="javascripts/scale.fix.js"></script>
-    
   </body>
 </html>
